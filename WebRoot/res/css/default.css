@@ -1,0 +1,171 @@
+@CHARSET "UTF-8";
+
+body {
+	font-family: Arial, 微软雅黑;
+	font-size: 11pt;
+	background-image: url("../../res/image/mainbg.jpg");
+	background-position: right bottom;
+	background-repeat: no-repeat;
+	margin: 0px;
+	height: 100%;
+	vertical-align: top;
+	background-attachment: fixed;
+	background-color: #ffffff;
+	scrollbar-3d-light-color: #78a9d9; /*立体滚动条亮边的颜色 */
+	scrollbar-arrow-color: #d8fcfc; /*上下按钮上三角箭头的颜色 */
+	scrollbar-base-color: #66A9D1; /*滚动条的基本颜色 */
+	scrollbar-dark-shadow-color: #d8fcfc; /*立体滚动条强阴影的颜色 */
+	scrollbar-face-color: #ABD2E9; /*立体滚动条凸出部分的颜色*/
+	SCROLLBAR-HIGHLIGHT-COLOR: #e4f0f5; /*滚动条空白部分的颜色 */
+	scrollbar-shadow-color: #d8fcfc; /*立体滚动条阴影的颜色 */
+}
+
+th {
+	background-image: url("../../res/image/sor_header.jpg");
+}
+
+table.output {
+	border-collapse: collapse;
+	text-align: center;
+	word-break: keep-all;
+	white-space: nowrap;
+	width: 95%;
+	margin: 5px;
+	font-size: 11pt;
+}
+
+td.outputhead {
+	text-align: left;
+	border: #85AEC7 1px solid;
+	word-break: keep-all;
+	white-space: nowrap;
+	background-color: #E6EFF9;
+	line-height: 20px;
+	padding: 5px;
+}
+
+td.output {
+	text-align: left;
+	border: #85AEC7 1px solid;
+	word-break: keep-all;
+	white-space: nowrap;
+}
+
+th.output {
+	text-align: center;
+	background-color: #5A92A0;
+	border: #85AEC7 1px solid;
+}
+
+table.tabstruct {
+	border-collapse: collapse;
+	width: 100%;
+}
+
+td.tabstruct {
+	border-bottom: #85AEC7 1px dotted;
+	word-break: break-all;
+	overflow: hidden;
+}
+
+th.tabstruct {
+	background-color: #5A92A0;
+	border-bottom: red 1px solid;
+}
+
+div.floatleft {
+	float: left;
+	height: auto;
+	margin: 1em;
+	border: gray 1px solid;
+}
+
+div.clearleft {
+	clear: left;
+	margin: 1em;
+}
+
+a.btn_close {
+	color: blue;
+	font-style: normal;
+	text-decoration: none;
+}
+
+a.btn_close:hover {
+	color: red;
+	font-style: normal;
+}
+
+.button {
+	BORDER: 1px solid #A6BBC6;
+	background-color: #FFFFFF;
+	font-size: 12px;
+	cursor: pointer;
+	HEIGHT: 23px;
+	background-image: url("../../res/image/btn-bg.gif");
+	padding-left: 3px;
+	padding-right: 3px;
+	margin-left: 3px;
+	margin-right: 3px;
+	padding-top: 3px;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+
+input {
+	FONT-SIZE: 12px;
+	border: 1px solid #cccccc;
+}
+/*jquery-ui tooltip*/
+
+.ui-tooltip,.arrow:after {
+	background: #E6EFF9;
+	border: 2px solid #85AEC7;
+}
+
+.ui-tooltip {
+	padding: 10px 20px;
+	color: #85AEC7;
+	border-radius: 20px;
+	font: normal 12px "Helvetica Neue", Sans-Serif;
+	text-transform: uppercase;
+	box-shadow: 0 0 7px black;
+}
+
+.arrow {
+	width: 70px;
+	height: 16px;
+	overflow: hidden;
+	position: absolute;
+	left: 50%;
+	margin-left: -35px;
+	bottom: -16px;
+}
+
+.arrow.top {
+	top: -16px;
+	bottom: auto;
+}
+
+.arrow.left {
+	left: 20%;
+}
+
+.arrow:after {
+	content: "";
+	position: absolute;
+	left: 20px;
+	top: -20px;
+	width: 25px;
+	height: 25px;
+	box-shadow: 6px 5px 9px -9px black;
+	-webkit-transform: rotate(45deg);
+	-moz-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	-o-transform: rotate(45deg);
+	tranform: rotate(45deg);
+}
+
+.arrow.top:after {
+	bottom: -20px;
+	top: auto;
+}
