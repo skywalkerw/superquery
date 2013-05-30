@@ -17,7 +17,6 @@ import org.apache.log4j.Logger;
 
 import wjm.common.exception.SuperQueryException;
 import wjm.common.util.StringUtil;
-import wjm.query.meta.SysQueryconfBO;
 
 /**
  * 用与数据转换
@@ -46,7 +45,7 @@ public class BOUtil {
 	public static <T extends BaseBO> List<PropertyDescriptor> getAllBOPropertys(Class<T> classz, boolean expend,
 			String[] expProperties) {
 		List<PropertyDescriptor> ret = new ArrayList<PropertyDescriptor>();
-		List<PropertyDescriptor> descriptors = getAllProperty(classz,new String[]{"class","mgred"});
+		List<PropertyDescriptor> descriptors = getAllProperty(classz, new String[] { "class", "mgred" });
 		PropertyDescriptor pd;
 		Class<?> idc;
 		boolean hasexpend;
@@ -58,7 +57,7 @@ public class BOUtil {
 					if (expProperties[j].equals(pd.getName())) {
 						hasexpend = true;
 						idc = pd.getPropertyType();
-						ret.addAll(getAllProperty(idc,new String[]{"class","mgred"}));
+						ret.addAll(getAllProperty(idc, new String[] { "class", "mgred" }));
 					}
 				}
 			}
@@ -97,7 +96,7 @@ public class BOUtil {
 	 * @param except排除属性
 	 * @return
 	 */
-	public static List<PropertyDescriptor> getAllProperty(Class<?> classz,String[] except) {
+	public static List<PropertyDescriptor> getAllProperty(Class<?> classz, String[] except) {
 		PropertyDescriptor[] descriptors = PropertyUtils.getPropertyDescriptors(classz);
 		List<PropertyDescriptor> list = new ArrayList<PropertyDescriptor>();
 		for (int j = 0; j < descriptors.length; j++) {
@@ -116,10 +115,76 @@ public class BOUtil {
 	 * @return
 	 * @throws SuperQueryException
 	 */
-	public static <T extends BaseBO> List<T> parameterMap2BO(Map<String, String[]> parameterMap, Class<T> classz)
+	public static <T extends BaseBO> List<T> paramMap2BOList(Map<String, String[]> parameterMap, Class<T> classz)
 			throws SuperQueryException {
 		log.info("转换Parameter为BO:" + classz);
 		List<T> list = new ArrayList<T>();
+		List<Map<String, Object>> maplist = paraMap2ListMap(parameterMap, classz);
+		log.info("size:" + maplist.size());
+		for (int i = 0; i < maplist.size(); i++) {
+			list.add(map2BO(maplist.get(i), classz));
+		}
+		return list;
+	}
+
+	/**
+	 * 页面传来的参数转换为BO对象
+	 * 丢弃同名重复值
+	 * @param parameterMap
+	 * @param classz
+	 * @return
+	 * @throws SuperQueryException
+	 */
+	public static <T extends BaseBO> T paramMap2SingleBO(Map<String, String[]> parameterMap, Class<T> classz)
+			throws SuperQueryException {
+		log.info("转换Parameter为BO:" + classz);
+		Map<String, Object> map = paraMap2Map(parameterMap,true);
+		T t = map2BO(map, classz);
+		return t;
+	}
+
+	/**
+	 * 将Map<String, String[]>转换为Map<String, Object> 即，丢弃同名重复值
+	 * 
+	 * @param parameterMap
+	 * @param key2Upper 将map的key值转成大写，便于SQL取值
+	 * @return
+	 */
+	public static Map<String, Object> paraMap2Map(Map<String, String[]> parameterMap,boolean key2Upper) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		Iterator<Entry<String, String[]>> it = parameterMap.entrySet().iterator();
+		Entry<String, String[]> entry;
+		String[] ss;
+		String key;
+		log.info("::开始转换Request参数！");
+		while (it.hasNext()) {
+			entry = it.next();
+			ss = entry.getValue();
+			key = entry.getKey();
+			if(key2Upper){
+				key= StringUtil.upper(key);
+			}
+			if (ss != null && ss.length > 0) {
+				if (ss.length > 1) {
+					log.warn("表单存在同名Parameter[" + key + "]");
+				}
+				map.put(key, ss[0]);
+				log.debug(key + "==[" + ss[0] + "]");
+			}
+		}
+		return map;
+	}
+
+	/**
+	 * 根据classz的属性名 搜索ParameterMap里面的值，并封装为返回List<Map<String, Object>>
+	 * 
+	 * @param parameterMap
+	 * @param classz
+	 * @return
+	 * @throws SuperQueryException
+	 */
+	public static <T extends BaseBO> List<Map<String, Object>> paraMap2ListMap(Map<String, String[]> parameterMap,
+			Class<T> classz) throws SuperQueryException {
 		Iterator<Entry<String, String[]>> it = parameterMap.entrySet().iterator();
 		Entry<String, String[]> entry;
 		String[] values;
@@ -174,11 +239,7 @@ public class BOUtil {
 				throw new SuperQueryException("Map转换失败" + classz.getName() + "." + key, e);
 			}
 		}
-		log.info("size:" + maplist.size());
-		for (int i = 0; i < maplist.size(); i++) {
-			list.add(map2BO(maplist.get(i), classz));
-		}
-		return list;
+		return maplist;
 	}
 
 	/**
@@ -189,12 +250,12 @@ public class BOUtil {
 	 * @return
 	 * @throws InstantiationException
 	 * @throws IllegalAccessException
-	 * @throws SuperQueryException 
+	 * @throws SuperQueryException
 	 */
 	public static Object castValueByProDescriptor(String value, PropertyDescriptor pd) throws InstantiationException,
 			IllegalAccessException, SuperQueryException {
 		Class<?> classz = pd.getPropertyType();
-		if(StringUtil.isEmpty(value)){
+		if (StringUtil.isEmpty(value)) {
 			return null;
 		}
 		try {
@@ -214,7 +275,7 @@ public class BOUtil {
 				return new BigInteger(value);
 			}
 		} catch (NumberFormatException e) {
-			throw new SuperQueryException("数字转换失败"+classz+"["+value+"]",e);
+			throw new SuperQueryException("数字转换失败" + classz + "[" + value + "]", e);
 		}
 
 		return value;
@@ -282,7 +343,7 @@ public class BOUtil {
 		try {
 			bo = classz.newInstance();
 			Object id;
-			List<PropertyDescriptor> props = BOUtil.getAllProperty(classz,new String[]{"class","mgred"});
+			List<PropertyDescriptor> props = BOUtil.getAllProperty(classz, new String[] { "class", "mgred" });
 			String propertyname;
 			for (PropertyDescriptor pd : props) {
 				propertyname = pd.getName();
@@ -392,7 +453,7 @@ public class BOUtil {
 		Object obj;
 		for (int i = 0; i < unpkCols.size(); i++) {
 			try {
-				if(PROPERTY_ID.equals(unpkCols.get(i))){
+				if (PROPERTY_ID.equals(unpkCols.get(i))) {
 					continue;
 				}
 				ret.append(unpkCols.get(i));

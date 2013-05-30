@@ -1,6 +1,5 @@
 package wjm.query.loader;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,70 +7,26 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import wjm.common.exception.DataStoreException;
+import wjm.common.exception.SuperQueryException;
 import wjm.common.util.SpringUtil;
 import wjm.common.util.StringUtil;
 import wjm.query.data.DataStore;
-import wjm.query.meta.SysQueryconfBO;
+import wjm.query.meta.QueryConf;
+import wjm.query.meta.SysQueryBO;
+import wjm.query.meta.SysQueryFieldBO;
 
 public class QueryconfLoader {
-	public static final String CONFTYPE_BOTH = "both";
-	public static final String CONFTYPE_OUTPUT = "output";
-	public static final String CONFTYPE_CONDITION = "condition";
 	private static final String LOADERNAME = "queryconfLoader";
 	private static final Logger log = Logger.getLogger(QueryconfLoader.class);
-	private Map<String, List<SysQueryconfBO>> confmap;
-	private Map<String, String> queryComments;
+	private Map<String, QueryConf> confmap;
 	private DataStore dataStore;
-	private Map<String,Map<String,String>> tablesAlias;
 
 	public QueryconfLoader() {
-		confmap = new HashMap<String, List<SysQueryconfBO>>();
-		queryComments = new HashMap<String, String>();
-		tablesAlias = new HashMap<String, Map<String,String>>();
+		confmap = new HashMap<String, QueryConf>();
 	}
 
 	public static QueryconfLoader instance() {
 		return (QueryconfLoader) SpringUtil.findBean(LOADERNAME);
-	}
-
-	/**
-	 * 加载所有
-	 * @return
-	 */
-	public  boolean load() {
-		List<Map<String, String>> list;
-		try {
-			list = dataStore.selectMapList("select distinct queryid from sys_queryconf");
-			Map<String, String> map;
-			for (int i = 0; i < list.size(); i++) {
-				map = list.get(i);
-				loadSingle(map.get("QUERYID"));
-			}
-			log.info("查询配置表加载完成[" + list.size() + "]");
-			return true;
-		} catch (DataStoreException e) {
-			log.error("查询配置加载失败", e);
-		}
-		return false;
-	}
-
-	/**
-	 * 加载一个
-	 * @param queryid
-	 * @throws DataStoreException
-	 */
-	public  boolean loadSingle(String queryid) throws DataStoreException {
-		String sqlbuf;
-		String querycomment;
-		sqlbuf = "select * from sys_queryconf where queryid='" + queryid + "' order by conforder asc";
-		List<SysQueryconfBO> entry = dataStore.selectBOList(sqlbuf, SysQueryconfBO.class);
-		confmap.put(queryid, entry);
-		if (entry.size() > 0) {
-			querycomment = entry.get(0).getQuerycomment();
-			queryComments.put(queryid, querycomment);
-		}
-		tablesAlias.put(queryid, initTablesAlias(queryid));
-		return true;
 	}
 
 	public DataStore getDataStore() {
@@ -83,17 +38,64 @@ public class QueryconfLoader {
 	}
 
 	/**
+	 * 加载所有
+	 * 
+	 * @return
+	 */
+	public boolean load() {
+		try {
+			List<SysQueryBO> list = dataStore.selectBOList("select * from sys_query", SysQueryBO.class);
+			QueryConf conf;
+			SysQueryBO bo;
+			for (int i = 0; i < list.size(); i++) {
+				conf = new QueryConf();
+				bo = list.get(i);
+				conf = buildConfBean(bo);
+				confmap.put(conf.getBo().getQueryid(), conf);
+			}
+			log.info("查询配置表加载完成[" + list.size() + "]");
+			return true;
+		} catch (DataStoreException e) {
+			log.error("查询配置加载失败", e);
+		}
+		return false;
+	}
+
+	private QueryConf buildConfBean(SysQueryBO bo) throws DataStoreException {
+		String queryid = bo.getQueryid();
+		QueryConf conf = new QueryConf();
+		log.debug("加载：" + queryid);
+		conf.setBo(bo);
+		conf.setFieldList(loadFields(queryid));
+		conf.setTableAlias(initTablesAlias(queryid));
+		return conf;
+	}
+
+	/**
+	 * 加载一个
+	 * 
+	 * @param queryid
+	 * @throws DataStoreException
+	 */
+	private List<SysQueryFieldBO> loadFields(String queryid) throws DataStoreException {
+		String sqlbuf;
+		sqlbuf = "select * from sys_queryfield where queryid='" + queryid + "' order by fieldorder asc";
+		List<SysQueryFieldBO> entry = dataStore.selectBOList(sqlbuf, SysQueryFieldBO.class);
+		return entry;
+	}
+
+	/**
 	 * 找出一个查询配置的表，并返回表与表别名
 	 * 
 	 * @param queryid
 	 * @return
 	 */
-	public Map<String, String> initTablesAlias(String queryid) {
+	private Map<String, String> initTablesAlias(String queryid) {
 		List<Map<String, String>> list;
 		Map<String, String> ret = new HashMap<String, String>();
 		try {
-			list = dataStore
-					.selectMapList("select distinct tabname from sys_queryconf where queryid='" + queryid + "'");
+			list = dataStore.selectMapList("select distinct tabname from sys_queryfield where queryid='" + queryid
+					+ "'");
 			for (int i = 0; i < list.size(); i++) {
 				ret.put(list.get(i).get("TABNAME"), "" + (char) ('a' + i));
 			}
@@ -102,84 +104,29 @@ public class QueryconfLoader {
 		}
 		return ret;
 	}
-	/**
-	 * 找出一个查询配置的表，并返回表与表别名
-	 * 
-	 * @param queryid
-	 * @return
-	 */
-	public Map<String, String> getTablesAlias(String queryid) {
-		return tablesAlias.get(queryid);
-	}
 
-	/**
-	 * 
-	 * @param queryid
-	 * @return 返回map key值为getColalias的大写值
-	 */
-	public Map<String, SysQueryconfBO> getConfMapByQueryid(String queryid) {
-		List<SysQueryconfBO> list = getConfListByQueryid(queryid);
-		Map<String, SysQueryconfBO> map = new HashMap<String, SysQueryconfBO>();
-		if (list == null) {
-			return map;
-		}
-		for (int i = 0; i < list.size(); i++) {
-			map.put(StringUtil.upper(list.get(i).getId().getColalias()), list.get(i));
-		}
-		return map;
-	}
-
-	/**
-	 * 获取Order by字段列表
-	 * 
-	 * @param queryid
-	 * @return
-	 */
-	public List<SysQueryconfBO> getOrderByConf(String queryid) {
-		List<SysQueryconfBO> list = getConfListByQueryid(queryid);
-		List<SysQueryconfBO> ret = new ArrayList<SysQueryconfBO>();
-		if (list == null) {
-			return ret;
-		}
-		for (int i = 0; i < list.size(); i++) {
-			if (!StringUtil.isEmpty(list.get(i).getOrderby())) {
-				ret.add(list.get(i));
-			}
-		}
-		return ret;
-	}
-
-	/**
-	 * @param queryid
-	 *            查询配置id
-	 * @param conftype
-	 *            配置类型
-	 * @return
-	 */
-	public List<SysQueryconfBO> getConfListByConfType(String queryid, String conftype) {
-		List<SysQueryconfBO> list = getConfListByQueryid(queryid);
-		List<SysQueryconfBO> ret = new ArrayList<SysQueryconfBO>();
-		if (list == null || conftype == null) {
-			return ret;
-		}
-		for (int i = 0; i < list.size(); i++) {
-			if (conftype.equals(list.get(i).getConftype())) {
-				ret.add(list.get(i));
-			} else if (CONFTYPE_BOTH.equals(list.get(i).getConftype())) {
-				ret.add(list.get(i));
-			}
-		}
-		return ret;
-	}
-
-	public List<SysQueryconfBO> getConfListByQueryid(String queryid) {
+	public QueryConf getConf(String queryid) {
 		return confmap.get(queryid);
 	}
 
-	public String getQueryName(String queryid) {
-		String name = queryComments.get(queryid);
-		log.info(queryid + "===" + name);
-		return name;
+	public boolean refeshFields(String queryid) throws SuperQueryException {
+		if (StringUtil.isEmpty(queryid)) {
+			throw new SuperQueryException("刷新配置时，查询ID为空！");
+		}
+		try {
+			List<SysQueryBO> list = dataStore.selectBOList("select * from sys_query where queryid='" + queryid + "'",
+					SysQueryBO.class);
+			QueryConf conf;
+			SysQueryBO bo;
+			for (int i = 0; i < list.size(); i++) {
+				conf = new QueryConf();
+				bo = list.get(i);
+				conf = buildConfBean(bo);
+				confmap.put(conf.getBo().getQueryid(), conf);
+			}
+			return true;
+		} catch (DataStoreException e) {
+			throw new SuperQueryException("", e);
+		}
 	}
-
 }

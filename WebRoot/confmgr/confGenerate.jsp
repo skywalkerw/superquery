@@ -74,11 +74,11 @@ $(document).ready(function() {
 		}
 		//alert("提交查询ID："+queryid);
 		$("#confform").attr("action",queryid+".cfg?action=addQueryConf");
-		//queryid和querycomment不在form里面
-		//提交的时候需要给hidden的queryid和querycomment设置值
+		//queryid和queryname不在form里面
+		//提交的时候需要给hidden的queryid和queryname设置值
 		//问为什么，因为要保证提交的参数是整齐的(一张表)
 		pushValues("queryid");
-		pushValues("querycomment");
+		pushValues("queryname");
 		$("#confform").submit();
 	});
 	
@@ -270,17 +270,23 @@ function checkUnique(){
 				</tr>
 			</table>
 		</div>
-	</form>
 	<div align="center" id="queryid_name"  class="clearleft">
 		<table>
 			<tr>
 				<td>查询ID</td>
 				<td><input id="queryid" name="queryid" type="text"></input></td>
-				<td>中文说明</td>
-				<td><input id="querycomment" name="querycomment" type="text"></input></td>
+				<td>查询名</td>
+				<td><input id="queryname" name="queryname" type="text"></input></td>
+				<td>父查询ID</td>
+				<td><input id="pqueryid" name="pqueryid" type="text"></input></td>
+				<td>查询类型</td>
+				<td><input id="querytype" name="querytype" type="text"></input></td>
+				<td>备注</td>
+				<td><input id="remark" name="remark" type="text"></input></td>
 				<td><input id="save_conf" type="submit" value="提交" class="button"></input></td>
 			</tr>
 		</table>
 	</div>
+	</form>
 </body>
 </html>

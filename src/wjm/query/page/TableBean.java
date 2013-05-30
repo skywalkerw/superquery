@@ -13,7 +13,8 @@ import wjm.common.util.StringUtil;
 import wjm.query.data.DataConverter;
 import wjm.query.loader.DictionaryLoader;
 import wjm.query.loader.QueryconfLoader;
-import wjm.query.meta.SysQueryconfBO;
+import wjm.query.meta.QueryConf;
+import wjm.query.meta.SysQueryFieldBO;
 
 /**
  * 用于处理查询结果表格--页面
@@ -27,7 +28,7 @@ public class TableBean implements Serializable {
 	private List<String> colalias;
 	private List<Map<String, Object>> datas;
 	private static final int PERLINE_FIELD_COUNT = 2;
-	private Map<String, SysQueryconfBO> queryconf;
+	private QueryConf queryconf;
 	private int rowsize;
 	private int colsize;
 	private String queryid;
@@ -37,7 +38,7 @@ public class TableBean implements Serializable {
 	public TableBean(List<String> colnames, List<Map<String, Object>> datalist, String queryid) throws SQLException {
 		this.colalias = colnames;
 		this.datas = datalist;
-		this.queryconf = QueryconfLoader.instance().getConfMapByQueryid(queryid);
+		this.queryconf = QueryconfLoader.instance().getConf(queryid);
 		this.setRowsize(datas.size());
 		this.setColsize(colalias.size());
 		this.queryid = queryid;
@@ -83,7 +84,7 @@ public class TableBean implements Serializable {
 		String queryname = dl.getValueByTPAndKey(QConst.SYS_DICTID_ALLCONFS, queryid);
 		sb.append("<table class='output'>\n<tr>");
 		sb.append("<tr><th  class='output' colspan='" + (PERLINE_FIELD_COUNT * 2) + "'>" + queryname + "-详细信息</th></tr>");
-		SysQueryconfBO bo = null;
+		SysQueryFieldBO bo = null;
 		Object data;
 		int count = 0;
 		for (int i = 0; i < colalias.size(); i++) {
@@ -93,7 +94,7 @@ public class TableBean implements Serializable {
 			if (count != 0 && count % PERLINE_FIELD_COUNT == 0) {
 				sb.append("</tr>\n<tr>");
 			}
-			bo = queryconf.get(colalias.get(i));
+			bo = queryconf.getByColailas(colalias.get(i));
 			data = datas.get(0).get(colalias.get(i));
 			if (bo != null) {
 				sb.append("<td class='outputhead'>");
@@ -123,7 +124,7 @@ public class TableBean implements Serializable {
 	private StringBuffer genHtmlHeader(boolean detail) {
 		StringBuffer ret = new StringBuffer();
 		String queryname = dl.getValueByTPAndKey(QConst.SYS_DICTID_ALLCONFS, queryid);
-		SysQueryconfBO bo;
+		SysQueryFieldBO bo;
 		ret.append("<tr>");
 		int count = 0;
 		if (showRowNO) {
@@ -135,7 +136,7 @@ public class TableBean implements Serializable {
 			if (RN.equals(colalias.get(i))) {
 				continue;
 			}
-			bo = queryconf.get(colalias.get(i));
+			bo = queryconf.getByColailas(colalias.get(i));
 			if (bo == null) {
 				ret.append("<th class='output'>");
 				ret.append(colalias.get(i));
@@ -163,7 +164,7 @@ public class TableBean implements Serializable {
 		StringBuffer ret = new StringBuffer();
 		Map<String, Object> row;
 		String data;
-		SysQueryconfBO bo;
+		SysQueryFieldBO bo;
 		Map<String, Object> pks = new HashMap<String, Object>();
 		for (int j = 0; j < datas.size(); j++) {
 			row = datas.get(j);
@@ -175,7 +176,7 @@ public class TableBean implements Serializable {
 				if (RN.equals(colalias.get(i))) {
 					continue;
 				}
-				bo = queryconf.get(colalias.get(i));
+				bo = queryconf.getByColailas(colalias.get(i));
 				if (bo == null) {
 					ret.append("<td  class='output'>");
 					ret.append(StringUtil.trim(row.get(colalias.get(i))));

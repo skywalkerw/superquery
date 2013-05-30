@@ -9,8 +9,8 @@
 		</property>
 		<property name="url" value="jdbc:oracle:thin:@192.168.10.100:1521:orcl">
 		</property>
-		<property name="username" value="query"></property>
-		<property name="password" value="query"></property>
+		<property name="username" value="queryplus"></property>
+		<property name="password" value="queryplus"></property>
 	</bean>
 	<!--数据库处理类 -->
 	<bean id="dataStore" class="wjm.query.data.DataStore">

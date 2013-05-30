@@ -9,36 +9,36 @@ import java.util.Map.Entry;
 import org.apache.log4j.Logger;
 
 import wjm.common.exception.SuperQueryException;
-import wjm.common.util.QConst;
 import wjm.common.util.StringUtil;
 import wjm.query.loader.QueryconfLoader;
-import wjm.query.meta.SysQueryconfBO;
+import wjm.query.meta.QueryConf;
+import wjm.query.meta.SysQueryFieldBO;
 
 /**
  * 用于生成SQL
  * 
  * @author Administrator WJM 2012-12-13下午7:13:25
  */
-public class SqlBean {
+public class SqlMaker {
 	private static final String JOINWAY_LEFT = "left";
 	private static final String JOINWAY_RIGHT = "right";
-	private static final Logger log = Logger.getLogger(SqlBean.class);
-	private Map<String, SysQueryconfBO> confMap;
+	private static final Logger log = Logger.getLogger(SqlMaker.class);
+	private QueryConf conf;
 	private Map<String, Object> pMap;
 	private Map<String, String> tableAlias;
 	private String queryid;
 
-	public SqlBean(String queryid, Map<String, Object> param) throws SuperQueryException {
+	public SqlMaker(String queryid, Map<String, Object> param) throws SuperQueryException {
 		this.queryid = queryid;
 		this.pMap = param;
 		if (pMap == null) {
 			pMap = new HashMap<String, Object>();
 		}
-		this.confMap = QueryconfLoader.instance().getConfMapByQueryid(queryid);
-		if (this.confMap == null || this.confMap.isEmpty()) {
+		this.conf = QueryconfLoader.instance().getConf(this.queryid);
+		if (this.conf == null) {
 			throw new SuperQueryException("没有配置查询:[" + queryid + "]");
 		}
-		this.tableAlias = QueryconfLoader.instance().getTablesAlias(this.queryid);
+		this.tableAlias = conf.getTableAlias();
 	}
 
 	public String makeSqlSelect() {
@@ -82,12 +82,12 @@ public class SqlBean {
 
 	private StringBuffer makeOrderby() {
 		StringBuffer sb = new StringBuffer();
-		List<SysQueryconfBO> list = QueryconfLoader.instance().getOrderByConf(this.queryid);
+		List<SysQueryFieldBO> list =conf.getOrderByField();
 		if (list == null || list.size() == 0) {
 			return sb;
 		}
 		sb.append(" order by ");
-		SysQueryconfBO bo;
+		SysQueryFieldBO bo;
 		for (int i = 0; i < list.size(); i++) {
 			bo = list.get(i);
 			sb.append(tableAlias.get(bo.getTabname()));
@@ -104,21 +104,20 @@ public class SqlBean {
 
 	private StringBuffer makeCondition() {
 		StringBuffer sb = new StringBuffer();
-		List<SysQueryconfBO> list = QueryconfLoader.instance().getConfListByConfType(this.queryid,
-				QueryconfLoader.CONFTYPE_CONDITION);
+		List<SysQueryFieldBO> list = conf.getFieldListByFieldType(QueryConf.FIELDTYPE_CONDITION);
 		if (list == null || list.size() == 0) {
 			return sb;
 		}
 		sb.append(" where 1=1");
-		SysQueryconfBO bo;
+		SysQueryFieldBO bo;
 		Object param;
 		String operand;
-		SysQueryconfBO operandbo;
+		SysQueryFieldBO operandbo;
 		StringBuffer buf;// 一条AND语句
 		StringBuffer subbuf;// 操作符及右边值的处理
 		for (int i = 0; i < list.size(); i++) {
 			bo = list.get(i);
-			param = pMap.get(bo.getId().getColalias());
+			param = pMap.get(StringUtil.upper(bo.getId().getColalias()));
 			buf = new StringBuffer();
 			buf.append(" and ");
 			buf.append(tableAlias.get(bo.getTabname()));
@@ -132,7 +131,7 @@ public class SqlBean {
 				// 联表查询条件
 				operand = bo.getOperand();
 				if (!StringUtil.isEmpty(operand)) {
-					operandbo = confMap.get(StringUtil.upper(operand));
+					operandbo = conf.getByColailas(operand);
 					if (operandbo != null) {
 						// 判断join方式
 						String left = "", right = "";
@@ -204,13 +203,12 @@ public class SqlBean {
 
 	private StringBuffer makeOutput() {
 		StringBuffer sb = new StringBuffer();
-		List<SysQueryconfBO> list = QueryconfLoader.instance().getConfListByConfType(this.queryid,
-				QueryconfLoader.CONFTYPE_OUTPUT);
+		List<SysQueryFieldBO> list = conf.getFieldListByFieldType(QueryConf.FIELDTYPE_OUTPUT);
 		if (list == null || list.size() == 0) {
 			return sb;
 		}
 		sb.append("select ");
-		SysQueryconfBO bo;
+		SysQueryFieldBO bo;
 		for (int i = 0; i < list.size(); i++) {
 			bo = list.get(i);
 

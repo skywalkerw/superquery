@@ -4,6 +4,11 @@ import java.io.Serializable;
 
 import wjm.common.util.QConst;
 
+/**
+ * 分页用
+ * @author WJM 
+ * 2013-5-29 上午10:17:27
+ */
 public class PageBean implements Serializable {
 	private int pageIndex = 1;// 当前页
 	private int pageSize = 20;// 每页记录数

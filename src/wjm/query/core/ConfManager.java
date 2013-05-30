@@ -16,11 +16,12 @@ import wjm.common.util.QConst;
 import wjm.common.util.StringUtil;
 import wjm.query.common.base.BOUtil;
 import wjm.query.data.DataStore;
-import wjm.query.data.SqlBean;
+import wjm.query.data.SqlMaker;
 import wjm.query.loader.DictionaryLoader;
 import wjm.query.loader.QueryconfLoader;
-import wjm.query.meta.SysQueryconfBO;
-import wjm.query.meta.SysQueryconfBOId;
+import wjm.query.meta.SysQueryBO;
+import wjm.query.meta.SysQueryFieldBO;
+import wjm.query.meta.SysQueryFieldBOId;
 import wjm.query.meta.TableStructBO;
 import wjm.query.page.PageUtil;
 import wjm.query.page.TableBean;
@@ -31,16 +32,16 @@ import wjm.query.page.TableStructBean;
  * 
  * @author Administrator WJM 2012-12-17下午6:02:58
  */
-public class ConfGener {
+public class ConfManager {
 	private static final String COLALIAS = "colalias";
 	private static final String QUERYID = "queryid";
 	private static final String DEFAULT_OPPER = "=";
 	private static final String DEFAULT_DISPLAYTYPE = "plain";
 	private static final String DEFAULT_CTRLTYPE = "text";
-	private static final String DEFAULT_CONFTYPE = "both";
+	private static final String DEFAULT_FIELDTYPE = "both";
 	private static final String COLNAME = "colname";
 	private static final String TABLENAME = "tablename";
-	private static final Logger log = Logger.getLogger(ConfGener.class);
+	private static final Logger log = Logger.getLogger(ConfManager.class);
 	private static final String headers = "<tr>                                     "
 			+ "	<th class='output'>调序</th>          " + "	<th class='output'>表名</th>          "
 			+ "	<th class='output'>列名</th>          " + "	<th class='output'>列注释</th>        "
@@ -104,7 +105,7 @@ public class ConfGener {
 		try {
 			Map<String, Object> param = new HashMap<String, Object>();
 			param.put("tabname", tablename);
-			String s = new SqlBean(QConst.SYS_QUERYID_TABLESTURCT, param).makeSqlSelect();
+			String s = new SqlMaker(QConst.SYS_QUERYID_TABLESTURCT, param).makeSqlSelect();
 			List<TableStructBO> list = DataStore.instance().selectBOList(s, TableStructBO.class);
 			Map<String, String> map = new HashMap<String, String>();
 			for (int k = 0; k < list.size(); k++) {
@@ -132,20 +133,20 @@ public class ConfGener {
 			return "非法请求！";
 		}
 		try {
-			List<SysQueryconfBO> bolist = BOUtil.parameterMap2BO(parameterMap, SysQueryconfBO.class);
+			List<SysQueryFieldBO> bolist = BOUtil.paramMap2BOList(parameterMap, SysQueryFieldBO.class);
 			String queryid = parameterMap.get(QUERYID)[0];
-			SysQueryconfBO bo;
+			SysQueryFieldBO bo;
 			List<String> sqllist = new ArrayList<String>();
 			DataStore ds = DataStore.instance();
 			int updatesize = 0;
 			for (int i = 0; i < bolist.size(); i++) {
 				bo = bolist.get(i);
-				bo.setConforder(new BigDecimal(i + 1));// 设置顺序
+				bo.setFieldorder(new BigDecimal(i + 1));// 设置顺序
 				//log.info("-----------------"+parameterMap.get("insert")[i]);
 				if ("true".equals(parameterMap.get("insert")[i])) {
-					sqllist.add(BOUtil.bo2InsertSql(bo, QConst.SYS_QUERYCONF_TABLENAME));
+					sqllist.add(BOUtil.bo2InsertSql(bo, QConst.SYS_QUERYFIELD_TABLENAME));
 				} else {
-					sqllist.add(BOUtil.bo2UpdateSql(bo, QConst.SYS_QUERYCONF_TABLENAME));
+					sqllist.add(BOUtil.bo2UpdateSql(bo, QConst.SYS_QUERYFIELD_TABLENAME));
 				}
 			}
 			updatesize = ds.excuteUpdateBath(sqllist.toArray(new String[0]));
@@ -168,7 +169,7 @@ public class ConfGener {
 			throw new SuperQueryException("不安全的操作：删除查询配置。需要指定查询ID");
 		}
 		try {
-			String sql = "delete from sys_queryconf where queryid='" + queryid + "'";
+			String sql = "delete from sys_queryfield where queryid='" + queryid + "'";
 			if (!StringUtil.isEmpty(colalias)) {
 				sql += " and colalias='" + colalias + "'";
 			}
@@ -182,7 +183,7 @@ public class ConfGener {
 	}
 
 	private String checkQueryid(String queryid) throws SuperQueryException {
-		String sql = "select count(*) count from sys_queryconf where queryid='" + queryid + "'";
+		String sql = "select count(*) count from sys_query where queryid='" + queryid + "'";
 		try {
 			List<Map<String, Object>> list = DataStore.instance().selectMapList(sql);
 			if (list.size() > 0) {
@@ -209,19 +210,22 @@ public class ConfGener {
 	private String addQueryConf(Map<String, String[]> parameterMap) throws SuperQueryException {
 		StringBuffer ret = new StringBuffer();
 		try {
-			List<SysQueryconfBO> bolist = BOUtil.parameterMap2BO(parameterMap, SysQueryconfBO.class);
 			if (parameterMap.get(QUERYID) == null) {
 				return "非法请求！";
 			}
+			SysQueryBO confbo = BOUtil.paramMap2SingleBO(parameterMap, SysQueryBO.class);
+			log.info(BOUtil.bo2InsertSql(confbo, QConst.SYS_QUERY_TABLENAME));
+			
+			List<SysQueryFieldBO> bolist = BOUtil.paramMap2BOList(parameterMap, SysQueryFieldBO.class);
 			String queryid = parameterMap.get(QUERYID)[0];
-			SysQueryconfBO bo;
+			SysQueryFieldBO bo;
 			List<String> sqllist = new ArrayList<String>();
 			DataStore ds = DataStore.instance();
 			int updatesize;
 			for (int i = 0; i < bolist.size(); i++) {
 				bo = bolist.get(i);
-				bo.setConforder(new BigDecimal(i + 1));// 设置顺序
-				sqllist.add(BOUtil.bo2InsertSql(bo, QConst.SYS_QUERYCONF_TABLENAME));
+				bo.setFieldorder(new BigDecimal(i + 1));// 设置顺序
+				sqllist.add(BOUtil.bo2InsertSql(bo, QConst.SYS_QUERYFIELD_TABLENAME));
 			}
 			updatesize = ds.excuteUpdateBath(sqllist.toArray(new String[0]));
 			if (updatesize > 0) {
@@ -244,10 +248,10 @@ public class ConfGener {
 	 * @param queryid
 	 * @throws DataStoreException
 	 */
-	private void refresh(String queryid) throws DataStoreException {
+	private void refresh(String queryid) throws SuperQueryException, DataStoreException {
 		QueryconfLoader cl = QueryconfLoader.instance();
 		DictionaryLoader dl = DictionaryLoader.instance();
-		if (cl.loadSingle(queryid)) {
+		if (cl.refeshFields(queryid)) {
 			log.info("加载查询配置成功！");
 			dl.loadAddon();
 			log.info("加载数据字典附加部分成功！");
@@ -266,9 +270,9 @@ public class ConfGener {
 		String sql;
 		try {
 			Map<String, Object> param = new HashMap<String, Object>();
-			param.put("tabname", tablename);
-			param.put("colname", colname);
-			sql = new SqlBean(QConst.SYS_QUERYID_TABLESTURCT, param).makeSqlSelect();
+			param.put("TABNAME", tablename);
+			param.put("COLNAME", colname);
+			sql = new SqlMaker(QConst.SYS_QUERYID_TABLESTURCT, param).makeSqlSelect();
 			List<TableStructBO> list = DataStore.instance().selectBOList(sql, TableStructBO.class);
 			ret.append(makeConfTRs_Add(list));
 		} catch (SuperQueryException e) {
@@ -288,17 +292,17 @@ public class ConfGener {
 	private StringBuffer makeConfTRs_Add(List<TableStructBO> list) {
 		StringBuffer ret = new StringBuffer();
 		TableStructBO bo;
-		SysQueryconfBO conf;
-		SysQueryconfBOId id;
+		SysQueryFieldBO conf;
+		SysQueryFieldBOId id;
 		for (int i = 0; i < list.size(); i++) {
 			bo = list.get(i);
 			// 先根据表结构初始化查询配置
-			id = new SysQueryconfBOId();
+			id = new SysQueryFieldBOId();
 			id.setColalias(bo.getColname());
-			conf = new SysQueryconfBO();
+			conf = new SysQueryFieldBO();
 			conf.setId(id);
 			conf.setTabname(bo.getTabname());
-			conf.setConftype(DEFAULT_CONFTYPE);
+			conf.setFieldtype(DEFAULT_FIELDTYPE);
 			conf.setCtrltype(DEFAULT_CTRLTYPE);
 			conf.setDisptype(DEFAULT_DISPLAYTYPE);
 			conf.setOpper(DEFAULT_OPPER);
@@ -317,8 +321,8 @@ public class ConfGener {
 		try {
 			Map<String, Object> param = new HashMap<String, Object>();
 			param.put("QUERYID", queryid);
-			String sql = new SqlBean(QConst.SYS_QUERYID_QUERYCONF, param).makeSqlSelect();
-			List<SysQueryconfBO> bolist = DataStore.instance().selectBOList(sql, SysQueryconfBO.class);
+			String sql = new SqlMaker(QConst.SYS_QUERYID_QUERYCONF, param).makeSqlSelect();
+			List<SysQueryFieldBO> bolist = DataStore.instance().selectBOList(sql, SysQueryFieldBO.class);
 			for (int i = 0; i < bolist.size(); i++) {
 				ret.append(PageUtil.makeConfModifyTRbyConfBO(bolist.get(i), false));
 			}
@@ -348,7 +352,7 @@ public class ConfGener {
 
 	private String getAllTables() throws SuperQueryException {
 		StringBuffer ret = new StringBuffer();
-		String tablessql = new SqlBean(QConst.SYS_QUERYID_ALLTABLES, null).makeSqlSelect();
+		String tablessql = new SqlMaker(QConst.SYS_QUERYID_ALLTABLES, null).makeSqlSelect();
 		List<Map<String, String>> buflist;
 		Map<String, String> map;
 		try {
@@ -373,8 +377,8 @@ public class ConfGener {
 		StringBuffer ret = new StringBuffer();
 		try {
 			Map<String, Object> param = new HashMap<String, Object>();
-			param.put("tabname", tablename);
-			String s = new SqlBean(QConst.SYS_QUERYID_TABLESTURCT, param).makeSqlSelect();
+			param.put("TABNAME", tablename);
+			String s = new SqlMaker(QConst.SYS_QUERYID_TABLESTURCT, param).makeSqlSelect();
 			List<TableStructBO> list = DataStore.instance().selectBOList(s, TableStructBO.class);
 			TableStructBean tsbean = new TableStructBean(list);
 			ret.append(tsbean.toHtml());

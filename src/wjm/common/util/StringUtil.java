@@ -3,11 +3,14 @@ package wjm.common.util;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.apache.log4j.Logger;
+
 /**
  * @author WJM
  * @time 2012-11-26下午4:38:27
  */
 public class StringUtil {
+	private static final Logger log = Logger.getLogger(StringUtil.class);
 	/**
 	 * 是否为空，包括null和长度为零的空串
 	 * 
@@ -98,5 +101,17 @@ public class StringUtil {
 			
 		}
 		return myDate;
+	}
+	
+	public static int parseInt(String org,int defaultv){
+		if(org==null){
+			return defaultv;
+		}
+		try {
+			return Integer.parseInt(org);
+		} catch (NumberFormatException e) {
+			log.warn("["+org+"]转换数字失败,返回默认值"+defaultv);
+			return defaultv;
+		}
 	}
 }

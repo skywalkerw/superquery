@@ -52,7 +52,7 @@ public class DictionaryLoader {
 		loadBySql(QConst.SYS_DICTID_DICTTYPE, adddicttypes);
 		dictmap.get(QConst.SYS_DICTID_DICTTYPE).put(QConst.SYS_DICTID_DICTTYPE, "数据字典类型列表");
 		count++;
-		String addqueryconfs = "select distinct queryid key,querycomment value from sys_queryconf order by queryid asc";
+		String addqueryconfs = "select distinct queryid key,queryname value from sys_query order by queryid asc";
 		loadBySql(QConst.SYS_DICTID_ALLCONFS, addqueryconfs);
 		count++;
 		return count;

@@ -5,22 +5,22 @@ import java.math.BigDecimal;
 import wjm.query.common.base.BaseBO;
 
 /**
- * SysQueryconfBO entity. @author MyEclipse Persistence Tools
+ * 对应表SYS_QUERYFIELD
+ * SysQueryFieldBO entity. @author MyEclipse Persistence Tools
  */
 
-public class SysQueryconfBO extends BaseBO {
+public class SysQueryFieldBO extends BaseBO {
 
 	// Fields
 
 	/**
 	 * 联合主键名必须叫ID
 	 */
-	private SysQueryconfBOId id;
-	private String querycomment;
+	private SysQueryFieldBOId id;
 	private String tabname;
 	private String joinway;
-	private String conftype;
-	private BigDecimal conforder;
+	private String fieldtype;
+	private BigDecimal fieldorder;
 	private String colrealname;
 	private String colcomment;
 	private String ctrltype;
@@ -38,27 +38,26 @@ public class SysQueryconfBO extends BaseBO {
 	// Constructors
 
 	/** default constructor */
-	public SysQueryconfBO() {
+	public SysQueryFieldBO() {
 	}
 
 	/** minimal constructor */
-	public SysQueryconfBO(SysQueryconfBOId id, String tabname, String conftype, String colrealname) {
+	public SysQueryFieldBO(SysQueryFieldBOId id, String tabname, String fieldtype, String colrealname) {
 		this.id = id;
 		this.tabname = tabname;
-		this.conftype = conftype;
+		this.fieldtype = fieldtype;
 		this.colrealname = colrealname;
 	}
 
 	/** full constructor */
-	public SysQueryconfBO(SysQueryconfBOId id, String querycomment, String tabname, String joinway, String conftype,
-			BigDecimal conforder, String colrealname, String colcomment, String ctrltype, BigDecimal ctrllen,
+	public SysQueryFieldBO(SysQueryFieldBOId id, String tabname, String joinway, String fieldtype,
+			BigDecimal fieldorder, String colrealname, String colcomment, String ctrltype, BigDecimal ctrllen,
 			BigDecimal displen, String disptype, String dicttype, String css, String orderby, String opper,String operand) {
 		this.id = id;
-		this.querycomment = querycomment;
 		this.tabname = tabname;
 		this.joinway = joinway;
-		this.conftype = conftype;
-		this.setConforder(conforder);
+		this.fieldtype = fieldtype;
+		this.setFieldorder(fieldorder);
 		this.colrealname = colrealname;
 		this.colcomment = colcomment;
 		this.ctrltype = ctrltype;
@@ -74,20 +73,12 @@ public class SysQueryconfBO extends BaseBO {
 
 	// Property accessors
 
-	public SysQueryconfBOId getId() {
+	public SysQueryFieldBOId getId() {
 		return this.id;
 	}
 
-	public void setId(SysQueryconfBOId id) {
+	public void setId(SysQueryFieldBOId id) {
 		this.id = id;
-	}
-
-	public String getQuerycomment() {
-		return this.querycomment;
-	}
-
-	public void setQuerycomment(String querycomment) {
-		this.querycomment = querycomment;
 	}
 
 	public String getTabname() {
@@ -106,12 +97,12 @@ public class SysQueryconfBO extends BaseBO {
 		this.joinway = joinway;
 	}
 
-	public String getConftype() {
-		return this.conftype;
+	public String getFieldtype() {
+		return this.fieldtype;
 	}
 
-	public void setConftype(String conftype) {
-		this.conftype = conftype;
+	public void setFieldtype(String fieldtype) {
+		this.fieldtype = fieldtype;
 	}
 
 
@@ -211,12 +202,12 @@ public class SysQueryconfBO extends BaseBO {
 		this.validator = validator;
 	}
 
-	public BigDecimal getConforder() {
-		return conforder;
+	public BigDecimal getFieldorder() {
+		return fieldorder;
 	}
 
-	public void setConforder(BigDecimal conforder) {
-		this.conforder = conforder;
+	public void setFieldorder(BigDecimal fieldorder) {
+		this.fieldorder = fieldorder;
 	}
 
 	public String getIspk() {
