@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import wjm.query.common.base.BaseBO;
 
 /**
+ * 对应查询query_tablestruct的输出结果
  * @author Administrator WJM 2012-12-11下午6:24:39
  */
 public class TableStructBO extends BaseBO {

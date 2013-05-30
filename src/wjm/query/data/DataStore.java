@@ -59,20 +59,20 @@ public class DataStore {
 
 	public BigDecimal selectCount(String queryid, Map<String, Object> param) throws SuperQueryException,
 			DataStoreException {
-		String sql = new SqlBean(queryid, param).makeSqlcount();
+		String sql = new SqlMaker(queryid, param).makeSqlcount();
 		List<Map<String, Object>> list = select(sql, RESULT_MAPLIST, queryid);
 		return (BigDecimal) list.get(0).get("COUNT");
 	}
 
 	public TableBean selectTableBeanByPage(String queryid, Map<String, Object> param, int startIndex, int pageSize)
 			throws DataStoreException, SuperQueryException {
-		String sql = new SqlBean(queryid, param).makeSqlByPage(startIndex, pageSize);
+		String sql = new SqlMaker(queryid, param).makeSqlByPage(startIndex, pageSize);
 		return select(sql, RESULT_TABLEBEAN, queryid);
 	}
 
 	public TableBean selectTableBean(String queryid, Map<String, Object> param) throws DataStoreException,
 			SuperQueryException {
-		String sql = new SqlBean(queryid, param).makeSqlSelect();
+		String sql = new SqlMaker(queryid, param).makeSqlSelect();
 		return select(sql, RESULT_TABLEBEAN, queryid);
 	}
 

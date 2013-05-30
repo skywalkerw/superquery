@@ -6,7 +6,7 @@ import wjm.query.common.base.BaseBO;
  * SysQueryconfBOId entity. @author MyEclipse Persistence Tools
  */
 
-public class SysQueryconfBOId extends BaseBO{
+public class SysQueryFieldBOId extends BaseBO{
 
 	// Fields
 
@@ -16,11 +16,11 @@ public class SysQueryconfBOId extends BaseBO{
 	// Constructors
 
 	/** default constructor */
-	public SysQueryconfBOId() {
+	public SysQueryFieldBOId() {
 	}
 
 	/** full constructor */
-	public SysQueryconfBOId(String queryid, String colalias) {
+	public SysQueryFieldBOId(String queryid, String colalias) {
 		this.queryid = queryid;
 		this.colalias = colalias;
 	}
@@ -48,9 +48,9 @@ public class SysQueryconfBOId extends BaseBO{
 			return true;
 		if ((other == null))
 			return false;
-		if (!(other instanceof SysQueryconfBOId))
+		if (!(other instanceof SysQueryFieldBOId))
 			return false;
-		SysQueryconfBOId castOther = (SysQueryconfBOId) other;
+		SysQueryFieldBOId castOther = (SysQueryFieldBOId) other;
 
 		return ((this.getQueryid() == castOther.getQueryid()) || (this.getQueryid() != null
 				&& castOther.getQueryid() != null && this.getQueryid().equals(castOther.getQueryid())))

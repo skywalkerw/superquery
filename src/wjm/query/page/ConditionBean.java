@@ -12,7 +12,8 @@ import wjm.common.util.QConst;
 import wjm.common.util.StringUtil;
 import wjm.query.loader.DictionaryLoader;
 import wjm.query.loader.QueryconfLoader;
-import wjm.query.meta.SysQueryconfBO;
+import wjm.query.meta.QueryConf;
+import wjm.query.meta.SysQueryFieldBO;
 
 /**
  * 用户处理查询条件--页面
@@ -23,7 +24,7 @@ public class ConditionBean implements Serializable {
 	private static final Logger log = Logger.getLogger(ConditionBean.class);
 	private static final int PERLINE_FIELD_COUNT = 2;
 	private Map<String, Object> initParams;
-	private List<SysQueryconfBO> confList;
+	private List<SysQueryFieldBO> confList;
 	private String queryid;
 
 	public ConditionBean(String queryid, Map<String, Object> initParams) throws SuperQueryException {
@@ -32,7 +33,7 @@ public class ConditionBean implements Serializable {
 		if (this.initParams == null) {
 			this.initParams = new HashMap<String, Object>();
 		}
-		this.confList = QueryconfLoader.instance().getConfListByConfType(queryid, QueryconfLoader.CONFTYPE_CONDITION);
+		this.confList = QueryconfLoader.instance().getConf(queryid).getFieldListByFieldType(QueryConf.FIELDTYPE_CONDITION);
 		if (this.confList == null || this.confList.isEmpty()) {
 			throw new SuperQueryException(QConst.ERRCODE_QUERYNOTFOUNT, "没有配置查询:[" + queryid + "]或该查询没有配置查询条件");
 		}
@@ -40,7 +41,7 @@ public class ConditionBean implements Serializable {
 
 	public String toHtml() {
 		StringBuffer sb = new StringBuffer();
-		SysQueryconfBO bo;
+		SysQueryFieldBO bo;
 		String queryname = DictionaryLoader.instance().getValueByTPAndKey(QConst.SYS_DICTID_ALLCONFS, queryid);
 		sb.append("<form action='").append(this.queryid).append(QConst.ACTION_SUFFIX_OUTPUT)
 				.append("' method='post'>\n");

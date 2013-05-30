@@ -48,7 +48,7 @@
 					var head = $("#select_queryid option[value='" + queryid + "']").text();
 					$("#confmgrdiv").empty();
 					$("#confmgrdiv").append(html);
-					$("#querycomment").val(head.slice(head.indexOf('-')+1,head.length));
+					$("#queryname").val(head.slice(head.indexOf('-')+1,head.length));
 				}
 			});
 			//20130311保护query打头的配置
@@ -120,7 +120,7 @@
 			var queryid = $("#queryid").val();
 			$("#confform").attr("action",queryid+".cfg?action=updateConf");
 			pushValues("queryid");
-			pushValues("querycomment");
+			pushValues("queryname");
 			$("#confform").submit();
 		});
 
@@ -302,7 +302,7 @@
 		<table id="buttons" style="display:none;">
 			<tr>
 				<td>中文说明</td>
-				<td><input id="querycomment" name="querycomment" type="text"></input></td>
+				<td><input id="queryname" name="queryname" type="text"></input></td>
 				<td><input id="btn_delete" type="button" class="button" value="删除当前"></input>
 				</td>
 				<td><input id="btn_edit" type="button"  class="button"  value="编辑"></input>

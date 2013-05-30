@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 
 import wjm.common.util.StringUtil;
 import wjm.query.loader.DictionaryLoader;
-import wjm.query.meta.SysQueryconfBO;
+import wjm.query.meta.SysQueryFieldBO;
 
 /**
  * 用户数据格式转换
@@ -14,7 +14,7 @@ import wjm.query.meta.SysQueryconfBO;
 public class DataConverter {
 	private static final Logger log = Logger.getLogger(DataConverter.class);
 	private static final boolean CONTAINSKEY = true;
-	public static String convert(Object data, SysQueryconfBO conf) {
+	public static String convert(Object data, SysQueryFieldBO conf) {
 		if (data == null) {
 			return "";
 		}

@@ -14,7 +14,7 @@ import wjm.common.exception.SuperQueryException;
 import wjm.common.util.QConst;
 import wjm.query.action.IActionFactory;
 import wjm.query.action.QueryFactory;
-import wjm.query.core.ConfGener;
+import wjm.query.core.ConfManager;
 
 public class QueryServlet extends HttpServlet {
 	private static final Logger log = Logger.getLogger(QueryServlet.class);

@@ -13,8 +13,8 @@ import wjm.common.util.StringUtil;
 import wjm.query.common.base.BOUtil;
 import wjm.query.loader.DictionaryLoader;
 import wjm.query.loader.QueryconfLoader;
-import wjm.query.meta.SysQueryconfBO;
-import wjm.query.meta.SysQueryconfBOId;
+import wjm.query.meta.SysQueryFieldBO;
+import wjm.query.meta.SysQueryFieldBOId;
 import wjm.query.meta.TableStructBO;
 
 /**
@@ -43,7 +43,7 @@ public class PageUtil {
 		} catch (SuperQueryException e) {
 			throw e;
 		}
-		return wrapByHtmlBody(ret, QueryconfLoader.instance().getQueryName(queryid));
+		return wrapByHtmlBody(ret, QueryconfLoader.instance().getConf(queryid).getBo().getQueryname());
 	}
 
 	public static StringBuffer makeOutListByTableBeanWithPage(TableBean tbean, Map<String, Object> param,
@@ -65,13 +65,13 @@ public class PageUtil {
 		ret.append("</table>\n");
 		ret.append(inputHiddens(param));
 		ret.append("</form>");
-		return wrapByHtmlBody(ret, QueryconfLoader.instance().getQueryName(tbean.getQueryid()));
+		return wrapByHtmlBody(ret, QueryconfLoader.instance().getConf(tbean.getQueryid()).getBo().getQueryname());
 	}
 
 	public static Object makeOutDetailByTableBean(TableBean tbean) {
 		StringBuffer ret = new StringBuffer();
 		ret.append(tbean.toHtmlDetailTable());
-		return wrapByHtmlBody(ret, QueryconfLoader.instance().getQueryName(tbean.getQueryid()) + "-详细信息");
+		return wrapByHtmlBody(ret, QueryconfLoader.instance().getConf(tbean.getQueryid()).getBo().getQueryname() + "-详细信息");
 	}
 
 	public static StringBuffer inputHiddens(Map<String, Object> param) {
@@ -89,7 +89,7 @@ public class PageUtil {
 		return sb;
 	}
 
-	public static StringBuffer makeConditionCtrl(SysQueryconfBO bo, Object def_V) {
+	public static StringBuffer makeConditionCtrl(SysQueryFieldBO bo, Object def_V) {
 		StringBuffer sb = new StringBuffer();
 		if (def_V == null) {
 			def_V = "";
@@ -199,12 +199,12 @@ public class PageUtil {
 	}
 
 	/**
-	 * @param conf
+	 * @param field
 	 * @param insert
 	 *            true 新增，false 修改
 	 * @return
 	 */
-	public static StringBuffer makeConfModifyTRbyConfBO(SysQueryconfBO conf, boolean insert) {
+	public static StringBuffer makeConfModifyTRbyConfBO(SysQueryFieldBO field, boolean insert) {
 		StringBuffer ret = new StringBuffer();
 		ret.append("<tr>");
 		// 顺序调整
@@ -216,29 +216,31 @@ public class PageUtil {
 		ret.append("<a name='up'  href='#'><img style='border:0px;' src='");
 		ret.append(QConst.CONTEXTPATH);
 		ret.append("res/image/arrow_up.gif' width='12' height='12' alt='向上'></a>");
-		ret.append("<input name='queryid' type='hidden' value='" + StringUtil.trim(conf.getId().getQueryid())).append(
-				"'></input>");
-		ret.append("<input name='querycomment' type='hidden' value='" + StringUtil.trim(conf.getQuerycomment()))
-				.append("'></input>");
+		ret.append("<input name='queryid' type='hidden' value='" + StringUtil.trim(field.getId().getQueryid()));
+		ret.append("'></input>");
+		ret.append("<input name='queryname' type='hidden' value='");
+		if(QueryconfLoader.instance().getConf(field.getId().getQueryid())!=null)
+		ret.append(StringUtil.trim(QueryconfLoader.instance().getConf(field.getId().getQueryid()).getBo().getQueryname()));
+		ret.append("'></input>");
 		ret.append("<input type='hidden' name='insert' value='" + insert + "'></input>").append("</td>");
 
-		ret.append(makeConfTDText(conf.getTabname(), "tabname", false));
-		ret.append(makeConfTDText(conf.getColrealname(), "colrealname", false));
-		ret.append(makeConfTDText(conf.getColcomment(), "colcomment", true));
-		ret.append(makeConfTDText(conf.getId().getColalias(), "colalias", insert));// colailas
-		ret.append(makeConfTDSelect(conf.getConftype(), "conftype", "conftype", false));
-		ret.append(makeConfTDSelect(conf.getCtrltype(), "ctrltype", "ctrltype", true));
-		ret.append(makeConfTDText(StringUtil.trim(conf.getCtrllen()), "ctrllen", true));
-		ret.append(makeConfTDText(StringUtil.trim(conf.getDisplen()), "displen", true));
-		ret.append(makeConfTDSelect(conf.getValidator(), "validator", "validator", true));
-		ret.append(makeConfTDSelect(conf.getOpper(), "opper", "opper", true));
-		ret.append(makeConfTDText(conf.getOperand(), "operand", true));
-		ret.append(makeConfTDSelect(conf.getJoinway(), "joinway", "joinway", true));
-		ret.append(makeConfTDSelect(conf.getOrderby(), "orderby", "orderby", true));
-		ret.append(makeConfTDSelect(conf.getDicttype(), "dicttype", QConst.SYS_DICTID_DICTTYPE, true));
-		ret.append(makeConfTDSelect(conf.getDisptype(), "disptype", "disptype", false));
-		ret.append(makeConfTDText(conf.getCss(), "css", true));
-		ret.append(makeConfTDSelect(conf.getIspk(), "ispk", "ispk", true));
+		ret.append(makeConfTDText(field.getTabname(), "tabname", false));
+		ret.append(makeConfTDText(field.getColrealname(), "colrealname", false));
+		ret.append(makeConfTDText(field.getColcomment(), "colcomment", true));
+		ret.append(makeConfTDText(field.getId().getColalias(), "colalias", insert));// colailas
+		ret.append(makeConfTDSelect(field.getFieldtype(), "fieldtype", "fieldtype", false));
+		ret.append(makeConfTDSelect(field.getCtrltype(), "ctrltype", "ctrltype", true));
+		ret.append(makeConfTDText(StringUtil.trim(field.getCtrllen()), "ctrllen", true));
+		ret.append(makeConfTDText(StringUtil.trim(field.getDisplen()), "displen", true));
+		ret.append(makeConfTDSelect(field.getValidator(), "validator", "validator", true));
+		ret.append(makeConfTDSelect(field.getOpper(), "opper", "opper", true));
+		ret.append(makeConfTDText(field.getOperand(), "operand", true));
+		ret.append(makeConfTDSelect(field.getJoinway(), "joinway", "joinway", true));
+		ret.append(makeConfTDSelect(field.getOrderby(), "orderby", "orderby", true));
+		ret.append(makeConfTDSelect(field.getDicttype(), "dicttype", QConst.SYS_DICTID_DICTTYPE, true));
+		ret.append(makeConfTDSelect(field.getDisptype(), "disptype", "disptype", false));
+		ret.append(makeConfTDText(field.getCss(), "css", true));
+		ret.append(makeConfTDSelect(field.getIspk(), "ispk", "ispk", true));
 		ret.append("</tr>\n");
 		return ret;
 	}

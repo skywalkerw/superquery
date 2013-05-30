@@ -35,9 +35,13 @@ public class QConst {
 	 */
 	public static final String SYS_QUERYID_QUERYCONF = "query_queryconf";
 	/**
-	 * 查询配置表表明
+	 * 查询配置附表表名
 	 */
-	public static final String SYS_QUERYCONF_TABLENAME = "sys_queryconf";
+	public static final String SYS_QUERYFIELD_TABLENAME = "sys_queryfield";
+	/**
+	 * 查询配置表表名
+	 */
+	public static final String SYS_QUERY_TABLENAME = "sys_query";
 	
 	/**
 	 * 所有数据字典类型

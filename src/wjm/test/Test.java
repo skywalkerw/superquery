@@ -3,6 +3,7 @@ package wjm.test;
 import java.beans.PropertyDescriptor;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -20,7 +21,7 @@ import wjm.common.exception.DataStoreException;
 import wjm.common.exception.SuperQueryException;
 import wjm.query.data.DataSourceFactory;
 import wjm.query.data.DataStore;
-import wjm.query.meta.SysQueryconfBO;
+import wjm.query.meta.SysQueryFieldBO;
 import wjm.query.page.ConditionBean;
 
 public class Test {
@@ -116,7 +117,7 @@ public class Test {
 
 	public static void main(String[] args) {
 		try {
-			SysQueryconfBO bo = SysQueryconfBO.class.newInstance();
+			SysQueryFieldBO bo = SysQueryFieldBO.class.newInstance();
 			PropertyDescriptor[] descriptors = PropertyUtils.getPropertyDescriptors(bo);
 			for (PropertyDescriptor pd : descriptors) {
 				System.out.println(pd.getName());
@@ -130,6 +131,9 @@ public class Test {
 				}
 			}
 
+			BigDecimal bd =	new BigDecimal("9999999999999999999999999999999999999999999999999999999999999");
+			bd.add(new BigDecimal("1"));
+			System.out.println(bd);
 		} catch (InstantiationException e) {
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
