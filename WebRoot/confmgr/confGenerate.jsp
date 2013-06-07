@@ -34,72 +34,14 @@ $(document).ready(function() {
 	
 	addEvents();
 	/*添加表按钮事件，获取表结构并加入container*/
-	$("#addtable").click(function() {
-		var tablename = $("#tablename").val();
-		//alert(tablename);
-		if($("#"+tablename).length>0){
-			alert("表"+tablename+"已经被添加!");
-			return ;
-		}
-		$.ajax({
-			url : "resp.jsp?action=getTableStruct&tablename="+tablename,
-			async : false,
-			success : function(html){
-				$("#container").append(html);
-				addEvents();
-			}
-		});
-	});
+	$("#addtable").click(addTable);
 	/*提交按钮处理*/
-	$("#save_conf").click(function(){
-		var queryid = $("#queryid").val();
-		if($("#queryconftable tr").length<=1){
-			alert("您还没有配置任何列！请选定表然后点击\"添加表\"按钮进行添加");
-			return false;
-		}
-		if(queryid==""){
-			alert("请填写\"查询ID\"!");
-			return false;
-		}
-		//验证查询配置id开头是否为query_
-		if(queryid.indexOf("query_")==0){
-			if(!confirm("\"query_\"开头的配置为系统查询["+queryid+"]将不能被删除，是否确认提交？"))
-				return false;	
-		}
-		if(!checkUnique()){
-			return false;
-		}
-		if(!checkQueryid(queryid)){
-			return false;
-		}
-		//alert("提交查询ID："+queryid);
-		$("#confform").attr("action",queryid+".cfg?action=addQueryConf");
-		//queryid和queryname不在form里面
-		//提交的时候需要给hidden的queryid和queryname设置值
-		//问为什么，因为要保证提交的参数是整齐的(一张表)
-		pushValues("queryid");
-		pushValues("queryname");
-		$("#confform").submit();
-	});
-	
+	$("#save_conf").click(saveConf);
 	//AJAX提交表单
-	var form = $("#confform");
-	form.submit(function() {
-		//alert("submit!");
-		$.post(
-			form.attr("action"),
-			form.serialize(),
-			function (result,status){
-				if(status=="success"){
-					alert(result);
-				}else{
-					alert("提交出错："+result);
-				}
-			},"text");
-		return false;
-	});
+	$("#confform").submit(ajaxSubmit);
 	
 });
+
 /**给新增的表结构div添加事件**/
 function addEvents(){
 	$(".btn_close:last").click(function(){
@@ -113,81 +55,134 @@ function addEvents(){
 		return false;
 	});
 	//全选按钮事件
-	$(".floatleft:last input[name='selectall']").click(function(){
-		var selects = $(this).parents(".floatleft").find("input[type='checkbox']").not($(this));
-		var tablename = $(this).parents(".floatleft").attr("id");
-		var confs = $("#confform input[name='tabname'][value='"+tablename+"']").parents("tr");
-		if($(this).attr("checked")){
-			confs.remove();
-			selects.attr("checked","checked");
-			$.ajax({
-				url : "resp.jsp?action=batchInitAddConfRow&tablename="+tablename,
-				async : false,
-				success : function(html){
-					$("#queryconftable").append(html);
-				}
-			});
-		}else{
-			selects.removeAttr("checked");
-			confs.remove();
-		}
-	});
-	$(".floatleft:last input[type='checkbox']").click(function(){
-		var colname = $(this).val();
-		var tablename = $(this).parents(".floatleft").attr("id");
-		if($(this).attr("checked")){
-			//alert(tablename+"."+colname);
-			$.ajax({
-				url : "resp.jsp?action=initAddConfRow&tablename="+tablename+"&colname="+colname,
-				async : false,
-				success : function(html){
-					$("#queryconftable").append(html);
-					//给箭头添加事件
-					$("a[name='down']").unbind("click");
-					$("a[name='up']").unbind("click");
-					$("a[name='down']").click(function(){
-						//alert("1");
-						var atr = $(this).parents("tr").next();
-						$(this).parents("tr").before(atr);
-						return false;
-					});
-					$("a[name='up']").click(function(){
-						//alert("2");
-						var atr = $(this).parents("tr").prev();//找到所在的tr的前一个tr
-						if(atr.find("th").length>0){//如果到了列头了，不网上调了
-							return false;
-						}
-						$(this).parents("tr").after(atr);//将前一个tr调整到当前tr的后面
-						return false;
-					});
-					$("#queryconftable input").attr("title","");
-					$("#queryconftable select").attr("title","");
-					$.each($("#queryconftable tr"), function(i,tr){
-						var msg = "当前配置";
-						msg += "<br/>表明：";
-						msg += $(tr).find("input[name='tabname']").val();
-						msg += "<br/>列名：";
-						msg += $(tr).find("input[name='colrealname']").val();
-						msg += "<br/>注释：";
-						msg += $(tr).find("input[name='colcomment']").val();
-						$(tr).find("input").attr("title",msg);
-						//$(tr).find("select").attr("title",msg);
-					});
-				}
-			});
-		}else{
-			var trs = $("#confform input[name='colrealname'][value='"+colname+"']").parents("tr");
-			$.each(trs,function(i,tr){
-				//alert(""+tr);
-				var inp = $(tr).find("input[name='tabname'][value='"+tablename+"']");
-				//alert(inp.length );
-				if(inp&&inp.length > 0){
-					$(tr).remove();
-				}
-			});
+	$(".floatleft:last input[name='selectall']").click(selectAll);
+	$(".floatleft:last input[type='checkbox']").click(selectOne);
+}
+
+function addTable(){
+	var tablename = $("#tablename").val();
+	//alert(tablename);
+	if($("#"+tablename).length>0){
+		alert("表"+tablename+"已经被添加!");
+		return ;
+	}
+	$.ajax({
+		url : "resp.jsp?action=getTableStruct&tablename="+tablename,
+		async : false,
+		success : function(html){
+			$("#container").append(html);
+			addEvents();
 		}
 	});
 }
+
+function saveConf(){
+	var queryid = $("#queryid").val();
+	if($("#queryconftable tr").length<=1){
+		alert("您还没有配置任何列！请选定表然后点击\"添加表\"按钮进行添加");
+		return false;
+	}
+	if(queryid==""){
+		alert("请填写\"查询ID\"!");
+		return false;
+	}
+	//验证查询配置id开头是否为query_
+	if(queryid.indexOf("query_")==0){
+		if(!confirm("\"query_\"开头的配置为系统查询["+queryid+"]将不能被删除，是否确认提交？"))
+			return false;	
+	}
+	if(!checkUnique("confform","colalias")){
+		return false;
+	}
+	if(!checkQueryid(queryid)){
+		return false;
+	}
+	//alert("提交查询ID："+queryid);
+	$("#confform").attr("action",queryid+".cfg?action=addQueryConf");
+	//queryid和queryname不在form里面
+	//提交的时候需要给hidden的queryid和queryname设置值
+	//问为什么，因为要保证提交的参数是整齐的(一张表)
+	pushValues("queryid");
+	pushValues("queryname");
+	$("#confform").submit();
+}
+
+function selectAll(){
+	var selects = $(this).parents(".floatleft").find("input[type='checkbox']").not($(this));
+	var tablename = $(this).parents(".floatleft").attr("id");
+	var confs = $("#confform input[name='tabname'][value='"+tablename+"']").parents("tr");
+	if($(this).attr("checked")){
+		confs.remove();
+		selects.attr("checked","checked");
+		$.ajax({
+			url : "resp.jsp?action=batchInitAddConfRow&tablename="+tablename,
+			async : false,
+			success : function(html){
+				$("#queryconftable").append(html);
+			}
+		});
+	}else{
+		selects.removeAttr("checked");
+		confs.remove();
+	}
+}
+
+function selectOne(){
+	var colname = $(this).val();
+	var tablename = $(this).parents(".floatleft").attr("id");
+	if($(this).attr("checked")){
+		//alert(tablename+"."+colname);
+		$.ajax({
+			url : "resp.jsp?action=initAddConfRow&tablename="+tablename+"&colname="+colname,
+			async : false,
+			success : function(html){
+				$("#queryconftable").append(html);
+				//给箭头添加事件
+				$("a[name='down']").unbind("click");
+				$("a[name='up']").unbind("click");
+				$("a[name='down']").click(function(){
+					//alert("1");
+					var atr = $(this).parents("tr").next();
+					$(this).parents("tr").before(atr);
+					return false;
+				});
+				$("a[name='up']").click(function(){
+					//alert("2");
+					var atr = $(this).parents("tr").prev();//找到所在的tr的前一个tr
+					if(atr.find("th").length>0){//如果到了列头了，不网上调了
+						return false;
+					}
+					$(this).parents("tr").after(atr);//将前一个tr调整到当前tr的后面
+					return false;
+				});
+				$("#queryconftable input").attr("title","");
+				$("#queryconftable select").attr("title","");
+				$.each($("#queryconftable tr"), function(i,tr){
+					var msg = "当前配置";
+					msg += "<br/>表明：";
+					msg += $(tr).find("input[name='tabname']").val();
+					msg += "<br/>列名：";
+					msg += $(tr).find("input[name='colrealname']").val();
+					msg += "<br/>注释：";
+					msg += $(tr).find("input[name='colcomment']").val();
+					$(tr).find("input").attr("title",msg);
+					//$(tr).find("select").attr("title",msg);
+				});
+			}
+		});
+	}else{
+		var trs = $("#confform input[name='colrealname'][value='"+colname+"']").parents("tr");
+		$.each(trs,function(i,tr){
+			//alert(""+tr);
+			var inp = $(tr).find("input[name='tabname'][value='"+tablename+"']");
+			//alert(inp.length );
+			if(inp&&inp.length > 0){
+				$(tr).remove();
+			}
+		});
+	}
+}
+
 /**给所有name=参数id 的input对象设置值*/
 function pushValues(id){
 	var val = $("#"+id).val();
@@ -207,35 +202,7 @@ function checkQueryid(queryid){
 	$("#queryid").css("color","black");
 	return true;
 }
-function checkUnique(){
-	var alias = $("#confform input[name='colalias']");
-	//alert(alias.length);
-	var ret = true;
-	$.each(alias,function(i,ali){
-		var val = $(ali).val();
-		var count = 0;
-		$.each(alias,function(j,alj){
-			if(val==$(alj).val()){
-				count ++;
-				if(count > 1){
-					$(alj).parents("tr").css("background-color","#FFFF00");
-					$(alj).css("color","red");
-				}
-			}
-		});
-		if(count>1){
-			alert("列别名["+val+"]重复");
-			$(ali).parents("tr").css("background-color","#FFFF00");
-			$(ali).css("color","red");
-			ret = false;
-			return ret;
-		}else{
-			$(ali).parents("tr").css("background-color","white");
-			$(ali).css("color","black");
-		}
-	});
-	return ret;
-}
+
 </script>
 </head>
 <body>
@@ -270,23 +237,23 @@ function checkUnique(){
 				</tr>
 			</table>
 		</div>
-	<div align="center" id="queryid_name"  class="clearleft">
-		<table>
-			<tr>
-				<td>查询ID</td>
-				<td><input id="queryid" name="queryid" type="text"></input></td>
-				<td>查询名</td>
-				<td><input id="queryname" name="queryname" type="text"></input></td>
-				<td>父查询ID</td>
-				<td><input id="pqueryid" name="pqueryid" type="text"></input></td>
-				<td>查询类型</td>
-				<td><input id="querytype" name="querytype" type="text"></input></td>
-				<td>备注</td>
-				<td><input id="remark" name="remark" type="text"></input></td>
-				<td><input id="save_conf" type="submit" value="提交" class="button"></input></td>
-			</tr>
-		</table>
-	</div>
+		<div align="center" id="queryid_name"  class="clearleft">
+			<table>
+				<tr>
+					<td>查询ID</td><!--  name="queryid"  -->
+					<td><input id="queryid" type="text"></input></td>
+					<td>查询名</td>
+					<td><input id="queryname" name="queryname" type="text"></input></td>
+					<td>父查询ID</td>
+					<td><input id="pqueryid" name="pqueryid" type="text"></input></td>
+					<td>查询类型</td>
+					<td><input id="querytype" name="querytype" type="text"></input></td>
+					<td>备注</td>
+					<td><input id="remark" name="remark" type="text"></input></td>
+					<td><input id="save_conf" type="submit" value="提交" class="button"></input></td>
+				</tr>
+			</table>
+		</div>
 	</form>
 </body>
 </html>

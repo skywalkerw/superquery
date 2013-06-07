@@ -8,265 +8,236 @@
 <title>查询配置管理</title>
 <jsp:include page="/res/include/common.jsp" ></jsp:include>
 <script type="text/javascript">
-	$(document).ready(function() {
-		$.ajaxSetup({cache: false });
-		$( document ).tooltip({
-			position: {
-				my: "left top",
-				at: "left bottom",
-				using: function( position, feedback ) {
-					$( this ).css( position );
-					$( "<div>" )
-						.addClass( "arrow" )
-						.addClass( feedback.vertical )
-						.addClass( feedback.horizontal )
-						.appendTo( this );
-				}
+$(document).ready(function() {
+	$.ajaxSetup({cache: false });
+	$( document ).tooltip({
+		position: {
+			my: "left top",
+			at: "left bottom",
+			using: function( position, feedback ) {
+				$( this ).css( position );
+				$( "<div>" )
+					.addClass( "arrow" )
+					.addClass( feedback.vertical )
+					.addClass( feedback.horizontal )
+					.appendTo( this );
 			}
-		});
-		getAllConfs();
-		$.ajax({
-			url : "resp.jsp?action=getAllTables",
-			async : false,
-			success : function(select){
-				$("#tablename_td").append(select);
-			}
-		});
-		$("#btn_query").click(function() {
-			$("#confmgrdiv").show();
-			$("#buttons").show();
-			$("#btn_edit").show();
-			$("#editconftable").hide();
-			$("#btn_save").hide();
-			$("#addcolumn").hide();
-			var queryid = $("#select_queryid").val();
-			$("#queryid").val(queryid);
-			$.ajax({
-				url : "resp.jsp?action=queryConf&queryid=" + queryid,
-				async : true,
-				success: function(html){
-					var head = $("#select_queryid option[value='" + queryid + "']").text();
-					$("#confmgrdiv").empty();
-					$("#confmgrdiv").append(html);
-					$("#queryname").val(head.slice(head.indexOf('-')+1,head.length));
-				}
-			});
-			//20130311保护query打头的配置
-			if(queryid.indexOf("query_")==0){
-				$("#btn_delete").attr("disabled","disabled");
-			}else{
-				$("#btn_delete").removeAttr("disabled");
-			}
-		});
-		
-		$("#btn_edit").click(function(){
-			$("#editconftable").show();
-			$("#btn_save").show();
-			$("#addcolumn").show();
-			$(this).hide();
-			$("#confmgrdiv").hide();
-			var queryid = $("#queryid").val();
-			var html = $.ajax({
-				url : "resp.jsp?action=initModifyConfRow&queryid=" + queryid,
-				async : false
-			}).responseText;
-			$("#editconftable").empty();
+		}
+	});
+	getAllConfs();
+	getAllTables();
+	$("#btn_query").click(queryConf);
+	$("#btn_edit").click(initEdit);
+	$("#btn_test").click(testCurrentConf);
+	$("#btn_delete").click(deleteConf);
+	$("#btn_save").click(updateConf);
+	$("#tablename").change(getAllTableCols);
+	$("#btn_addcol").click(addCol);
+	//AJAX提交表单
+	$("#confform").submit(ajaxSubmit);
+});
+
+function addCol(){
+	var colname = $("#colname").val();
+	var tablename = $("#tablename").val();
+	//alert(tablename+"  "+colname);
+	$.ajax({
+		url : "resp.jsp?action=initAddConfRow&tablename="+tablename+"&colname="+colname,
+		async : false,
+		success : function(html){
 			$("#editconftable").append(html);
 			$("a[name='delrow']").show();
 			addEvents();
-			var tablename = $("#tablename").val();
-			$.ajax({
-				url : "resp.jsp?action=getAllTableCols&tablename="+tablename,
-				async : false,
-				success : function(select){
-					$("#colname_td").empty();
-					$("#colname_td").append(select);
-				}
-			});
-			//20130311保护query打头的配置
-			if(queryid.indexOf("query_")==0){
-				$("#btn_delete").attr("disabled","disabled");
-				$("a[name='delrow']").attr("disabled","disabled");
-			}else{
-				$("#btn_delete").removeAttr("disabled");
-				$("a[name='delrow']").removeAttr("disabled");
-			}
-		});
-		
-		$("#btn_test").click(function(){
-			var queryid = $("#select_queryid").val();
-			window.open('<%=request.getContextPath()%>'+"/"+queryid+".qry");
-		});
-		
-		$("#btn_delete").click(function(){
-			var queryid = $("#queryid").val();
-			if(confirm("确认删除当前查询配置["+queryid+"]？")){
-				$.ajax({
-					url : "resp.jsp?action=deleteConf&queryid=" + queryid,
-					async : false,
-					success : function(html){
-						alert(html);
-						$("#btn_query").click();
-						getAllConfs();
-						return true;
-					}
-				});
-			}else{
-				return false;
-			}
-		});
-		
-		$("#btn_save").click(function(){
-			var queryid = $("#queryid").val();
-			$("#confform").attr("action",queryid+".cfg?action=updateConf");
-			pushValues("queryid");
-			pushValues("queryname");
-			$("#confform").submit();
-		});
-
-	
-		$("#tablename").change(function (){
-			var tabname= $(this).val();
-			$.ajax({
-				url : "resp.jsp?action=getAllTableCols&tablename="+tabname,
-				async : false,
-				success : function(select){
-					$("#colname_td").empty();
-					$("#colname_td").append(select);
-				}
-			});
-		});
-		$("#btn_addcol").click(function(){
-			var colname = $("#colname").val();
-			var tablename = $("#tablename").val();
-			//alert(tablename+"  "+colname);
-			$.ajax({
-				url : "resp.jsp?action=initAddConfRow&tablename="+tablename+"&colname="+colname,
-				async : false,
-				success : function(html){
-					$("#editconftable").append(html);
-					$("a[name='delrow']").show();
-					addEvents();
-				}
-			});
-		});
-		//AJAX提交表单
-		var form = $("#confform");
-		form.submit(function() {
-			//alert("submit!");
-			if(!checkUnique()){
-				return false;
-			}
-			$.post(
-				form.attr("action"),
-				form.serialize(),
-				function (result,status){
-					if(status=="success"){
-						alert(result);
-					}else{
-						alert("提交出错："+result);
-					}
-				},"text");
-			return false;
-		});
+		}
 	});
-	
-	/**给所有name=参数id 的input对象设置值*/
-	function pushValues(id){
-		var val = $("#"+id).val();
-		//alert(id+"=="+val);
-		$("#confform input[name='"+id+"']").val(val);
+}
+
+function getAllTableCols(){
+	var tabname= $(this).val();
+	$.ajax({
+		url : "resp.jsp?action=getAllTableCols&tablename="+tabname,
+		async : false,
+		success : function(select){
+			$("#colname_td").empty();
+			$("#colname_td").append(select);
+		}
+	});
+}
+
+function updateConf(){
+	if(!checkUnique("confform","colalias")){
+		return false;
 	}
+	var queryid = $("#queryid").val();
+	$("#confform").attr("action",queryid+".cfg?action=updateConf");
+	pushValues("queryid");
+	pushValues("queryname");
+	$("#confform").submit();
+}
 	
-	function getAllConfs(){
+/**给所有name=参数id 的input对象设置值*/
+function pushValues(id){
+	var val = $("#"+id).val();
+	//alert(id+"=="+val);
+	$("#confform input[name='"+id+"']").val(val);
+}
+
+function testCurrentConf(){
+	var queryid = $("#select_queryid").val();
+	window.open('<%=request.getContextPath()%>'+"/"+queryid+".qry");
+}
+
+function initEdit(){
+	$("#editconftable").show();
+	$("#btn_save").show();
+	$("#addcolumn").show();
+	$(this).hide();
+	$("#confmgrdiv").hide();
+	var queryid = $("#queryid").val();
+	var html = $.ajax({
+		url : "resp.jsp?action=initModifyConfRow&queryid=" + queryid,
+		async : false
+	}).responseText;
+	$("#editconftable").empty();
+	$("#editconftable").append(html);
+	$("a[name='delrow']").show();
+	addEvents();
+	var tablename = $("#tablename").val();
+	$.ajax({
+		url : "resp.jsp?action=getAllTableCols&tablename="+tablename,
+		async : false,
+		success : function(select){
+			$("#colname_td").empty();
+			$("#colname_td").append(select);
+		}
+	});
+	//20130311保护query打头的配置
+	if(queryid.indexOf("query_")==0){
+		$("#btn_delete").attr("disabled","disabled");
+		$("a[name='delrow']").attr("disabled","disabled");
+	}else{
+		$("#btn_delete").removeAttr("disabled");
+		$("a[name='delrow']").removeAttr("disabled");
+	}
+}
+
+function queryConf() {
+	$("#confmgrdiv").show();
+	$("#buttons").show();
+	$("#btn_edit").show();
+	$("#editconftable").hide();
+	$("#btn_save").hide();
+	$("#addcolumn").hide();
+	var queryid = $("#select_queryid").val();
+	$("#queryid").val(queryid);
+	$.ajax({
+		url : "resp.jsp?action=queryConf&queryid=" + queryid,
+		async : true,
+		success: function(html){
+			var head = $("#select_queryid option[value='" + queryid + "']").text();
+			$("#confmgrdiv").empty();
+			$("#confmgrdiv").append(html);
+			$("#queryname").val(head.slice(head.indexOf('-')+1,head.length));
+		}
+	});
+	//20130311保护query打头的配置
+	if(queryid.indexOf("query_")==0){
+		$("#btn_delete").attr("disabled","disabled");
+	}else{
+		$("#btn_delete").removeAttr("disabled");
+	}
+}
+
+function getAllTables(){
+	$.ajax({
+		url : "resp.jsp?action=getAllTables",
+		async : false,
+		success : function(select){
+			$("#tablename_td").append(select);
+		}
+	});
+}
+	
+function getAllConfs(){
+	$.ajax({
+		url : "resp.jsp?action=getAllConfs",
+		async : false,
+		success : function(select){
+			$("#select_queryid").html(select);
+		}
+	});
+}
+	
+function addEvents(){
+	$("a[name='down']").unbind("click");
+	$("a[name='down']").click(function(){
+		//alert("1");
+		var atr = $(this).parents("tr").next();
+		$(this).parents("tr").before(atr);
+		return false;
+	});
+	$("a[name='up']").unbind("click");
+	$("a[name='up']").click(function(){
+		//alert("2");
+		var atr = $(this).parents("tr").prev();//找到所在的tr的前一个tr
+		if(atr.find("th").length>0){//如果到了列头了，不网上调了
+			return false;
+		}
+		$(this).parents("tr").after(atr);//将前一个tr调整到当前tr的后面
+		return false;
+	});
+	$("a[name='delrow']").unbind("click");
+	$("a[name='delrow']").click(deleteRow);
+	$("#editconftable input").attr("title","");
+	$("#editconftable select").attr("title","");
+	$.each($("#editconftable tr"), function(i,tr){
+		var msg = "当前配置";
+		msg += "<br/>表明：";
+		msg += $(tr).find("input[name='tabname']").val();
+		msg += "<br/>列名：";
+		msg += $(tr).find("input[name='colrealname']").val();
+		msg += "<br/>注释：";
+		msg += $(tr).find("input[name='colcomment']").val();
+		$(tr).find("input").attr("title",msg);
+		//$(tr).find("select").attr("title",msg);
+	});
+}
+
+function deleteConf(){
+	var queryid = $("#queryid").val();
+	if(confirm("确认删除当前查询配置["+queryid+"]？")){
 		$.ajax({
-			url : "resp.jsp?action=getAllConfs",
+			url : "resp.jsp?action=deleteConf&queryid=" + queryid,
 			async : false,
-			success : function(select){
-				$("#select_queryid").html(select);
+			success : function(html){
+				alert(html);
+				$("#btn_query").click();
+				getAllConfs();
+				return true;
+			}
+		});
+	}else{
+		return false;
+	}
+}
+
+function deleteRow(){
+	var queryid = $("#queryid").val();
+	var colalias= $(this).parents("tr").find("input[name='colalias']").val();
+	var thisa = $(this);
+	if(confirm("确认删除当前查询配置["+queryid+"]？")){
+		$.ajax({
+			url : "resp.jsp?action=deleteConf&queryid=" + queryid+"&colalias="+colalias,
+			async : false,
+			success : function(html){
+				alert(html);
+				//alert(thisa.parents("tr").length);
+				thisa.parents("tr").remove();
 			}
 		});
 	}
-	
-	function addEvents(){
-		$("a[name='down']").unbind("click");
-		$("a[name='down']").click(function(){
-			//alert("1");
-			var atr = $(this).parents("tr").next();
-			$(this).parents("tr").before(atr);
-			return false;
-		});
-		$("a[name='up']").unbind("click");
-		$("a[name='up']").click(function(){
-			//alert("2");
-			var atr = $(this).parents("tr").prev();//找到所在的tr的前一个tr
-			if(atr.find("th").length>0){//如果到了列头了，不网上调了
-				return false;
-			}
-			$(this).parents("tr").after(atr);//将前一个tr调整到当前tr的后面
-			return false;
-		});
-		$("a[name='delrow']").unbind("click");
-		$("a[name='delrow']").click(function(){
-			var queryid = $("#queryid").val();
-			var colalias= $(this).parents("tr").find("input[name='colalias']").val();
-			var thisa = $(this);
-			if(confirm("确认删除当前查询配置["+queryid+"]？")){
-				$.ajax({
-					url : "resp.jsp?action=deleteConf&queryid=" + queryid+"&colalias="+colalias,
-					async : false,
-					success : function(html){
-						alert(html);
-						//alert(thisa.parents("tr").length);
-						thisa.parents("tr").remove();
-					}
-				});
-			}
-			return false;
-		});
-		$("#editconftable input").attr("title","");
-		$("#editconftable select").attr("title","");
-		$.each($("#editconftable tr"), function(i,tr){
-			var msg = "当前配置";
-			msg += "<br/>表明：";
-			msg += $(tr).find("input[name='tabname']").val();
-			msg += "<br/>列名：";
-			msg += $(tr).find("input[name='colrealname']").val();
-			msg += "<br/>注释：";
-			msg += $(tr).find("input[name='colcomment']").val();
-			$(tr).find("input").attr("title",msg);
-			//$(tr).find("select").attr("title",msg);
-		});
-	}
-	function checkUnique(){
-		var alias = $("#confform input[name='colalias']");
-		//alert(alias.length);
-		var ret = true;
-		$.each(alias,function(i,ali){
-			var val = $(ali).val();
-			var count = 0;
-			$.each(alias,function(j,alj){
-				if(val==$(alj).val()){
-					count ++;
-					if(count > 1){
-						$(alj).parents("tr").css("background-color","#FFFF00");
-						$(alj).css("color","red");
-					}
-				}
-			});
-			if(count>1){
-				alert("列别名["+val+"]重复");
-				$(ali).parents("tr").css("background-color","#FFFF00");
-				$(ali).css("color","red");
-				ret = false;
-				return ret;
-			}else{
-				$(ali).parents("tr").css("background-color","white");
-				$(ali).css("color","black");
-			}
-		});
-		return ret;
-	}
+	return false;
+}
 </script>
 </head>
 <body>
@@ -287,6 +258,18 @@
 		<form id="confform" action="" method="post" style="">
 			<table id="editconftable" class="output" style="width:100%;display:none;">
 			</table>
+			<table>
+				<tr>
+					<td>查询名</td>
+					<td><input id="queryname" name="queryname" type="text"></input></td>
+					<td>父查询ID</td>
+					<td><input id="pqueryid" name="pqueryid" type="text"></input></td>
+					<td>查询类型</td>
+					<td><input id="querytype" name="querytype" type="text"></input></td>
+					<td>备注</td>
+					<td><input id="remark" name="remark" type="text"></input></td>
+				</tr>
+			</table>
 		</form>
 		<div align="left">
 			<table class="output" id="addcolumn" style="width:auto;display:none;padding: 5px;">
@@ -301,13 +284,9 @@
 		</div>
 		<table id="buttons" style="display:none;">
 			<tr>
-				<td>中文说明</td>
-				<td><input id="queryname" name="queryname" type="text"></input></td>
-				<td><input id="btn_delete" type="button" class="button" value="删除当前"></input>
-				</td>
+				<td><input id="btn_delete" type="button" class="button" value="删除当前"></input></td>
 				<td><input id="btn_edit" type="button"  class="button"  value="编辑"></input>
-				<td><input id="btn_save" type="button"  class="button"  value="保存修改"></input>
-				</td>
+				<td><input id="btn_save" type="button"  class="button"  value="保存修改"></input></td>
 			</tr>
 		</table>
 	</div>
