@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import wjm.common.exception.DataStoreException;
 import wjm.common.exception.SuperQueryException;
@@ -23,6 +24,7 @@ import wjm.query.meta.SysQueryBO;
 import wjm.query.meta.SysQueryFieldBO;
 import wjm.query.meta.SysQueryFieldBOId;
 import wjm.query.meta.TableStructBO;
+import wjm.query.page.ControlUtil;
 import wjm.query.page.PageUtil;
 import wjm.query.page.TableBean;
 import wjm.query.page.TableStructBean;
@@ -96,14 +98,14 @@ public class ConfManager {
 	}
 
 	private String getAllTableCols(String tablename) {
-		log.debug("tablename=[" + tablename + "]");
+		log.info("tablename=[" + tablename + "]");
 		if (tablename == null) {
 			log.warn("没有传入表名称！");
 			return "";
 		}
 		StringBuffer ret = new StringBuffer();
 		try {
-			Map<String, Object> param = new HashMap<String, Object>();
+			LinkedCaseInsensitiveMap<Object> param = new LinkedCaseInsensitiveMap<Object>();
 			param.put("tabname", tablename);
 			String s = new SqlMaker(QConst.SYS_QUERYID_TABLESTURCT, param).makeSqlSelect();
 			List<TableStructBO> list = DataStore.instance().selectBOList(s, TableStructBO.class);
@@ -111,7 +113,7 @@ public class ConfManager {
 			for (int k = 0; k < list.size(); k++) {
 				map.put(list.get(k).getColname(), list.get(k).getColcnmment());
 			}
-			ret.append(PageUtil.makeSelect(map, COLNAME, COLNAME, null, false));
+			ret.append(ControlUtil.makeSelect(map, COLNAME, COLNAME, null, false));
 		} catch (DataStoreException e) {
 			log.error("", e);
 			ret.append(e.getMessage());
@@ -119,12 +121,12 @@ public class ConfManager {
 			log.error("", e);
 			ret.append(e.getMessage());
 		}
-		log.debug(ret);
+		log.info(ret);
 		return ret.toString();
 	}
 
 	private String getAllConfs() {
-		return PageUtil.makeOptions("allconfs", null, false).toString();
+		return ControlUtil.makeOptionsByDict("allconfs", null, false).toString();
 	}
 
 	private String updateConf(Map<String, String[]> parameterMap) throws SuperQueryException {
@@ -142,7 +144,7 @@ public class ConfManager {
 			for (int i = 0; i < bolist.size(); i++) {
 				bo = bolist.get(i);
 				bo.setFieldorder(new BigDecimal(i + 1));// 设置顺序
-				//log.info("-----------------"+parameterMap.get("insert")[i]);
+				// log.info("-----------------"+parameterMap.get("insert")[i]);
 				if ("true".equals(parameterMap.get("insert")[i])) {
 					sqllist.add(BOUtil.bo2InsertSql(bo, QConst.SYS_QUERYFIELD_TABLENAME));
 				} else {
@@ -210,20 +212,20 @@ public class ConfManager {
 	private String addQueryConf(Map<String, String[]> parameterMap) throws SuperQueryException {
 		StringBuffer ret = new StringBuffer();
 		try {
+			List<String> sqllist = new ArrayList<String>();
 			if (parameterMap.get(QUERYID) == null) {
-				return "非法请求！";
+				return "非法请求,查询ID不能为空！";
 			}
 			SysQueryBO confbo = BOUtil.paramMap2SingleBO(parameterMap, SysQueryBO.class);
 			log.info(BOUtil.bo2InsertSql(confbo, QConst.SYS_QUERY_TABLENAME));
-			
-			List<SysQueryFieldBO> bolist = BOUtil.paramMap2BOList(parameterMap, SysQueryFieldBO.class);
+			//TODO
+			List<SysQueryFieldBO> fieldlist = BOUtil.paramMap2BOList(parameterMap, SysQueryFieldBO.class);
 			String queryid = parameterMap.get(QUERYID)[0];
 			SysQueryFieldBO bo;
-			List<String> sqllist = new ArrayList<String>();
 			DataStore ds = DataStore.instance();
 			int updatesize;
-			for (int i = 0; i < bolist.size(); i++) {
-				bo = bolist.get(i);
+			for (int i = 0; i < fieldlist.size(); i++) {
+				bo = fieldlist.get(i);
 				bo.setFieldorder(new BigDecimal(i + 1));// 设置顺序
 				sqllist.add(BOUtil.bo2InsertSql(bo, QConst.SYS_QUERYFIELD_TABLENAME));
 			}
@@ -269,7 +271,7 @@ public class ConfManager {
 		StringBuffer ret = new StringBuffer();
 		String sql;
 		try {
-			Map<String, Object> param = new HashMap<String, Object>();
+			LinkedCaseInsensitiveMap<Object> param = new LinkedCaseInsensitiveMap<Object>();
 			param.put("TABNAME", tablename);
 			param.put("COLNAME", colname);
 			sql = new SqlMaker(QConst.SYS_QUERYID_TABLESTURCT, param).makeSqlSelect();
@@ -310,7 +312,7 @@ public class ConfManager {
 			conf.setColcomment(bo.getColcnmment());
 			conf.setCtrllen(bo.getDatalength());
 			conf.setDisplen(bo.getDatalength());
-			ret.append(PageUtil.makeConfModifyTRbyConfBO(conf, true));
+			ret.append(PageUtil.makeConfModifyTRbyFieldBO(conf, true));
 		}
 		log.debug(ret);
 		return ret;
@@ -318,27 +320,28 @@ public class ConfManager {
 
 	private String initModifyConfRow(String queryid) throws SuperQueryException {
 		StringBuffer ret = new StringBuffer(headers);
+		log.info("--------------------in");
 		try {
-			Map<String, Object> param = new HashMap<String, Object>();
+			LinkedCaseInsensitiveMap<Object> param = new LinkedCaseInsensitiveMap<Object>();
 			param.put("QUERYID", queryid);
 			String sql = new SqlMaker(QConst.SYS_QUERYID_QUERYCONF, param).makeSqlSelect();
 			List<SysQueryFieldBO> bolist = DataStore.instance().selectBOList(sql, SysQueryFieldBO.class);
 			for (int i = 0; i < bolist.size(); i++) {
-				ret.append(PageUtil.makeConfModifyTRbyConfBO(bolist.get(i), false));
+				ret.append(PageUtil.makeConfModifyTRbyFieldBO(bolist.get(i), false));
 			}
 		} catch (DataStoreException e) {
 			throw new SuperQueryException(e.getMessage(), e);
 		} catch (SuperQueryException e) {
 			throw e;
 		}
-		log.debug(ret);
+		log.info(ret);
 		return ret.toString();
 	}
 
 	private String queryConf(String queryid) throws SuperQueryException {
 		StringBuffer ret = new StringBuffer();
 		try {
-			Map<String, Object> param = new HashMap<String, Object>();
+			LinkedCaseInsensitiveMap<Object> param = new LinkedCaseInsensitiveMap<Object>();
 			param.put("QUERYID", queryid);
 			TableBean tbean = DataStore.instance().selectTableBean(QConst.SYS_QUERYID_QUERYCONF, param);
 			ret.append(tbean.toHtmlListTable(false));
@@ -361,7 +364,7 @@ public class ConfManager {
 			for (int k = 0; k < buflist.size(); k++) {
 				map.put(buflist.get(k).get("KEY"), buflist.get(k).get("VALUE"));
 			}
-			ret.append(PageUtil.makeSelect(map, TABLENAME, TABLENAME, null, false));
+			ret.append(ControlUtil.makeSelect(map, TABLENAME, TABLENAME, null, false));
 		} catch (DataStoreException e) {
 			throw new SuperQueryException("", e);
 		}
@@ -376,7 +379,7 @@ public class ConfManager {
 		}
 		StringBuffer ret = new StringBuffer();
 		try {
-			Map<String, Object> param = new HashMap<String, Object>();
+			LinkedCaseInsensitiveMap<Object> param = new LinkedCaseInsensitiveMap<Object>();
 			param.put("TABNAME", tablename);
 			String s = new SqlMaker(QConst.SYS_QUERYID_TABLESTURCT, param).makeSqlSelect();
 			List<TableStructBO> list = DataStore.instance().selectBOList(s, TableStructBO.class);

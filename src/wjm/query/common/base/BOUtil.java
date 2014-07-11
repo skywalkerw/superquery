@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import wjm.common.exception.SuperQueryException;
 import wjm.common.util.StringUtil;
@@ -119,7 +120,7 @@ public class BOUtil {
 			throws SuperQueryException {
 		log.info("转换Parameter为BO:" + classz);
 		List<T> list = new ArrayList<T>();
-		List<Map<String, Object>> maplist = paraMap2ListMap(parameterMap, classz);
+		List<LinkedCaseInsensitiveMap< Object>> maplist = paraMap2ListMap(parameterMap, classz);
 		log.info("size:" + maplist.size());
 		for (int i = 0; i < maplist.size(); i++) {
 			list.add(map2BO(maplist.get(i), classz));
@@ -138,7 +139,7 @@ public class BOUtil {
 	public static <T extends BaseBO> T paramMap2SingleBO(Map<String, String[]> parameterMap, Class<T> classz)
 			throws SuperQueryException {
 		log.info("转换Parameter为BO:" + classz);
-		Map<String, Object> map = paraMap2Map(parameterMap,true);
+		LinkedCaseInsensitiveMap<Object> map = paraMap2Map(parameterMap);
 		T t = map2BO(map, classz);
 		return t;
 	}
@@ -150,8 +151,8 @@ public class BOUtil {
 	 * @param key2Upper 将map的key值转成大写，便于SQL取值
 	 * @return
 	 */
-	public static Map<String, Object> paraMap2Map(Map<String, String[]> parameterMap,boolean key2Upper) {
-		Map<String, Object> map = new HashMap<String, Object>();
+	public static LinkedCaseInsensitiveMap<Object> paraMap2Map(Map<String, String[]> parameterMap) {
+		LinkedCaseInsensitiveMap<Object> map = new LinkedCaseInsensitiveMap<Object>();
 		Iterator<Entry<String, String[]>> it = parameterMap.entrySet().iterator();
 		Entry<String, String[]> entry;
 		String[] ss;
@@ -161,9 +162,6 @@ public class BOUtil {
 			entry = it.next();
 			ss = entry.getValue();
 			key = entry.getKey();
-			if(key2Upper){
-				key= StringUtil.upper(key);
-			}
 			if (ss != null && ss.length > 0) {
 				if (ss.length > 1) {
 					log.warn("表单存在同名Parameter[" + key + "]");
@@ -183,14 +181,14 @@ public class BOUtil {
 	 * @return
 	 * @throws SuperQueryException
 	 */
-	public static <T extends BaseBO> List<Map<String, Object>> paraMap2ListMap(Map<String, String[]> parameterMap,
+	public static <T extends BaseBO> List<LinkedCaseInsensitiveMap<Object>> paraMap2ListMap(Map<String, String[]> parameterMap,
 			Class<T> classz) throws SuperQueryException {
 		Iterator<Entry<String, String[]>> it = parameterMap.entrySet().iterator();
 		Entry<String, String[]> entry;
 		String[] values;
 		String key;
-		Map<String, Object> map;
-		List<Map<String, Object>> maplist = new ArrayList<Map<String, Object>>();
+		LinkedCaseInsensitiveMap<Object> map;
+		List<LinkedCaseInsensitiveMap<Object>> maplist = new ArrayList<LinkedCaseInsensitiveMap<Object>>();
 		List<String> pdlist = getAllBOPropertyNames(classz, true, new String[] { PROPERTY_ID });
 		Object obj;
 		PropertyDescriptor pd;
@@ -222,11 +220,11 @@ public class BOUtil {
 					obj = castValueByProDescriptor(values[i], pd);
 					// log.debug(key + ":" + obj);
 					if (maplist.size() <= i) {
-						map = new HashMap<String, Object>();
-						map.put(StringUtil.upper(key), obj);
+						map = new LinkedCaseInsensitiveMap<Object>();
+						map.put(key, obj);
 						maplist.add(map);
 					} else {
-						maplist.get(i).put(StringUtil.upper(key), obj);
+						maplist.get(i).put(key, obj);
 					}
 				}
 			} catch (IllegalAccessException e) {
@@ -338,7 +336,7 @@ public class BOUtil {
 	 * @return
 	 * @throws SuperQueryException
 	 */
-	public static <T extends BaseBO> T map2BO(Map<String, Object> mp, Class<T> classz) throws SuperQueryException {
+	public static <T extends BaseBO> T map2BO(LinkedCaseInsensitiveMap<Object> mp, Class<T> classz) throws SuperQueryException {
 		T bo = null;
 		try {
 			bo = classz.newInstance();
@@ -364,11 +362,11 @@ public class BOUtil {
 						// log.info(propertyname + "==[" +
 						// mp.get(StringUtil.upper(propertyname)) + "]==="+
 						// pd.getPropertyType());
-						PropertyUtils.setProperty(bo, propertyname, mp.get(StringUtil.upper(propertyname)));
+						PropertyUtils.setProperty(bo, propertyname, mp.get(propertyname));
 					}
 				} catch (IllegalArgumentException e) {
 					throw new SuperQueryException("数据转换BO失败,类型不匹配" + classz.getName() + "." + propertyname + ":"
-							+ mp.get(StringUtil.upper(propertyname)).getClass(), e);
+							+ mp.get(propertyname).getClass(), e);
 				} catch (InvocationTargetException e) {
 					throw new SuperQueryException("数据转换BO失败,无法设置值" + classz.getName() + "." + propertyname, e);
 				} catch (NoSuchMethodException e) {

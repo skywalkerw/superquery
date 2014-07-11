@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import wjm.common.exception.SuperQueryException;
 import wjm.common.util.QConst;
@@ -23,15 +24,15 @@ import wjm.query.meta.SysQueryFieldBO;
 public class ConditionBean implements Serializable {
 	private static final Logger log = Logger.getLogger(ConditionBean.class);
 	private static final int PERLINE_FIELD_COUNT = 2;
-	private Map<String, Object> initParams;
+	private LinkedCaseInsensitiveMap<Object> initParams;
 	private List<SysQueryFieldBO> confList;
 	private String queryid;
 
-	public ConditionBean(String queryid, Map<String, Object> initParams) throws SuperQueryException {
+	public ConditionBean(String queryid, LinkedCaseInsensitiveMap<Object> initParams) throws SuperQueryException {
 		this.initParams = initParams;
 		this.queryid = queryid;
 		if (this.initParams == null) {
-			this.initParams = new HashMap<String, Object>();
+			this.initParams = new LinkedCaseInsensitiveMap<Object>();
 		}
 		this.confList = QueryconfLoader.instance().getConf(queryid).getFieldListByFieldType(QueryConf.FIELDTYPE_CONDITION);
 		if (this.confList == null || this.confList.isEmpty()) {

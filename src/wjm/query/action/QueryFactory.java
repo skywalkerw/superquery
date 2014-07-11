@@ -5,6 +5,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import wjm.common.exception.SuperQueryException;
 import wjm.common.util.QConst;
@@ -41,7 +42,7 @@ public class QueryFactory implements IActionFactory {
 		} else if (servPath.endsWith(QConst.ACTION_SUFFIX_OUTPUT)) {
 			int pageIndex = StringUtil.parseInt(request.getParameter("pageIndex"), 1);
 			int pageSize = StringUtil.parseInt(request.getParameter("pageSize"), 20);
-			Map<String, Object> conditions = BOUtil.paraMap2Map(request.getParameterMap(),true);
+			LinkedCaseInsensitiveMap<Object> conditions = BOUtil.paraMap2Map(request.getParameterMap());
 			ret.append(new QueryService().queryByPage(queryid, ACTION_QUERY_DETAIL.equals(action), conditions, pageIndex, pageSize));
 		} else if (servPath.endsWith(QConst.ACTION_SUFFIX_CONF)) {
 			return new ConfManager().mapping(request);

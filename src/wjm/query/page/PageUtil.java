@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import wjm.common.exception.SuperQueryException;
 import wjm.common.util.QConst;
@@ -33,12 +34,12 @@ public class PageUtil {
 	private static int DEFAULT_MAXLEN = 64;// 单位字符
 	private static int FONTSIZE = 12;// px
 
-	public static StringBuffer makeConditionPageByQueryid(String queryid, Map<String, Object> param)
+	public static StringBuffer makeConditionPageByQueryid(String queryid, LinkedCaseInsensitiveMap<Object> param)
 			throws SuperQueryException {
 		ConditionBean condition;
 		StringBuffer ret = new StringBuffer();
 		try {
-			condition = new ConditionBean(queryid, null);
+			condition = new ConditionBean(queryid, param);
 			ret.append(condition.toHtml());
 		} catch (SuperQueryException e) {
 			throw e;
@@ -84,7 +85,7 @@ public class PageUtil {
 			// sb.append(" name = '"+entry.getKey()+"'");
 			// sb.append(" value = '"+entry.getValue()+"'");
 			// sb.append("></input>");
-			sb.append(makeInput(entry.getValue(), entry.getKey(), "hidden"));
+			sb.append(ControlUtil.makeInput(entry.getValue(), entry.getKey(), "hidden"));
 		}
 		return sb;
 	}
@@ -116,7 +117,7 @@ public class PageUtil {
 			sb.append("></input>");
 		} else if ("select".equals(ctrlType)) {
 			sb.append("<select ").append("name='").append(bo.getId().getColalias()).append("'>");
-			sb.append(makeOptions(bo.getCtrltype(), def_V.toString(), true));
+			sb.append(ControlUtil.makeOptionsByDict(bo.getCtrltype(), def_V.toString(), true));
 			sb.append("</select>");
 		} else {
 			// TODO 其他控件，例如calender
@@ -124,60 +125,7 @@ public class PageUtil {
 		return sb;
 	}
 
-	/**
-	 * @param map
-	 * @param id
-	 * @param name
-	 * @param needWrite
-	 *            是否加一条空白
-	 * @return
-	 */
-	public static StringBuffer makeSelect(Map<String, String> map, String id, String name, String value,
-			boolean needWrite) {
-		id = StringUtil.trim(id);
-		StringBuffer ret = new StringBuffer();
-		ret.append("<select id='").append(id).append("' name='").append(name).append("'>");
-		ret.append(makeOptions(map, value, needWrite));
-		ret.append("</select>");
-		log.debug(ret);
-		return ret;
-	}
-
-	/**
-	 * 
-	 * @param map
-	 * @param value
-	 * @param needWrite
-	 * @return
-	 */
-	public static StringBuffer makeOptions(Map<String, String> map, String value, boolean needWrite) {
-		StringBuffer ret = new StringBuffer();
-		if (map == null) {
-			return ret;
-		}
-		value = StringUtil.trim(value);
-		Iterator<Entry<String, String>> it = map.entrySet().iterator();
-		Entry<String, String> entry;
-		if (needWrite) {
-			ret.append("<option value=''>");
-			ret.append("[空]");
-			ret.append("</option>\n");
-		}
-		while (it.hasNext()) {
-			entry = it.next();
-			// <option value="SYS_QUERYCONF">SYS_QUERYCONF查询配置表</option>
-			ret.append("<option value='").append(entry.getKey()).append("'");
-			if (value.equals(entry.getKey())) {
-				ret.append(" selected='selected'");
-			}
-			ret.append(">");
-			ret.append(entry.getKey() == null ? "" : entry.getKey());
-			ret.append(entry.getValue() == null ? "" : "-" + entry.getValue());
-			ret.append("</option>\n");
-		}
-		// log.debug(ret);
-		return ret;
-	}
+	
 
 	public static StringBuffer wrapByHtmlBody(StringBuffer sb, String title) {
 		StringBuffer ret = new StringBuffer();
@@ -204,7 +152,7 @@ public class PageUtil {
 	 *            true 新增，false 修改
 	 * @return
 	 */
-	public static StringBuffer makeConfModifyTRbyConfBO(SysQueryFieldBO field, boolean insert) {
+	public static StringBuffer makeConfModifyTRbyFieldBO(SysQueryFieldBO field, boolean insert) {
 		StringBuffer ret = new StringBuffer();
 		ret.append("<tr>");
 		// 顺序调整
@@ -224,51 +172,41 @@ public class PageUtil {
 		ret.append("'></input>");
 		ret.append("<input type='hidden' name='insert' value='" + insert + "'></input>").append("</td>");
 
-		ret.append(makeConfTDText(field.getTabname(), "tabname", false));
-		ret.append(makeConfTDText(field.getColrealname(), "colrealname", false));
-		ret.append(makeConfTDText(field.getColcomment(), "colcomment", true));
-		ret.append(makeConfTDText(field.getId().getColalias(), "colalias", insert));// colailas
-		ret.append(makeConfTDSelect(field.getFieldtype(), "fieldtype", "fieldtype", false));
-		ret.append(makeConfTDSelect(field.getCtrltype(), "ctrltype", "ctrltype", true));
-		ret.append(makeConfTDText(StringUtil.trim(field.getCtrllen()), "ctrllen", true));
-		ret.append(makeConfTDText(StringUtil.trim(field.getDisplen()), "displen", true));
-		ret.append(makeConfTDSelect(field.getValidator(), "validator", "validator", true));
-		ret.append(makeConfTDSelect(field.getOpper(), "opper", "opper", true));
-		ret.append(makeConfTDText(field.getOperand(), "operand", true));
-		ret.append(makeConfTDSelect(field.getJoinway(), "joinway", "joinway", true));
-		ret.append(makeConfTDSelect(field.getOrderby(), "orderby", "orderby", true));
-		ret.append(makeConfTDSelect(field.getDicttype(), "dicttype", QConst.SYS_DICTID_DICTTYPE, true));
-		ret.append(makeConfTDSelect(field.getDisptype(), "disptype", "disptype", false));
-		ret.append(makeConfTDText(field.getCss(), "css", true));
-		ret.append(makeConfTDSelect(field.getIspk(), "ispk", "ispk", true));
+		ret.append(makeTdWrapedInput(field.getTabname(), "tabname", false));
+		ret.append(makeTdWrapedInput(field.getColrealname(), "colrealname", false));
+		ret.append(makeTdWrapedInput(field.getColcomment(), "colcomment", true));
+		ret.append(makeTdWrapedInput(field.getId().getColalias(), "colalias", insert));// colailas
+		ret.append(makeTdWrapedSelect(field.getFieldtype(), "fieldtype", "fieldtype", false));
+		ret.append(makeTdWrapedSelect(field.getCtrltype(), "ctrltype", "ctrltype", true));
+		ret.append(makeTdWrapedInput(StringUtil.trim(field.getCtrllen()), "ctrllen", true));
+		ret.append(makeTdWrapedInput(StringUtil.trim(field.getDisplen()), "displen", true));
+		ret.append(makeTdWrapedSelect(field.getValidator(), "validator", "validator", true));
+		ret.append(makeTdWrapedSelect(field.getOpper(), "opper", "opper", true));
+		ret.append(makeTdWrapedInput(field.getOperand(), "operand", true));
+		ret.append(makeTdWrapedSelect(field.getJoinway(), "joinway", "joinway", true));
+		ret.append(makeTdWrapedSelect(field.getOrderby(), "orderby", "orderby", true));
+		ret.append(makeTdWrapedSelect(field.getDicttype(), "dicttype", QConst.SYS_DICTID_DICTTYPE, true));
+		ret.append(makeTdWrapedSelect(field.getDisptype(), "disptype", "disptype", false));
+		ret.append(makeTdWrapedInput(field.getCss(), "css", true));
+		ret.append(makeTdWrapedSelect(field.getIspk(), "ispk", "ispk", true));
 		ret.append("</tr>\n");
 		return ret;
 	}
 
-	private static Object makeConfTDSelect(String value, String ctrlname, String dictType, boolean nullable) {
+	private static Object makeTdWrapedSelect(String value, String ctrlname, String dictType, boolean nullable) {
 		value = StringUtil.trim(value);
 		StringBuffer ret = new StringBuffer();
 		ret.append("<td class='output'>");
 		ret.append("<select ").append("name='").append(ctrlname).append("'>");
-		ret.append(makeOptions(dictType, value, nullable));
+		ret.append(ControlUtil.makeOptionsByDict(dictType, value, nullable));
 		ret.append("</select>");
 		ret.append("</td>");
 		return ret;
 	}
 
-	/**
-	 * 生成HTML oprion 标签列表
-	 * 
-	 * @param dictType
-	 * @param needWrite
-	 * @return
-	 */
-	public static StringBuffer makeOptions(String dictType, String value, boolean needWrite) {
-		Map<String, String> map = DictionaryLoader.instance().getEntryByTP(dictType);
-		return PageUtil.makeOptions(map, value, needWrite);
-	}
+	
 
-	private static StringBuffer makeConfTDText(String value, String ctrlname, boolean editable) {
+	private static StringBuffer makeTdWrapedInput(String value, String ctrlname, boolean editable) {
 		value = StringUtil.trim(value);
 		String type;
 		StringBuffer ret = new StringBuffer();
@@ -279,18 +217,11 @@ public class PageUtil {
 			type = "hidden";
 			ret.append(value);
 		}
-		ret.append(makeInput(value, ctrlname, type));
+		ret.append(ControlUtil.makeInput(value, ctrlname, type));
 		ret.append("</td>");
 		return ret;
 	}
 
-	private static StringBuffer makeInput(Object value, String ctrlname, String type) {
-		StringBuffer ret = new StringBuffer();
-		value = StringUtil.trim(value);
-		ret.append("<input type='").append(type).append("' value='").append(value).append("' ");
-		ret.append("name='").append(ctrlname).append("' ");
-		ret.append("></input>");
-		return ret;
-	}
+	
 
 }

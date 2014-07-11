@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.util.LinkedCaseInsensitiveMap;
+
 import wjm.common.util.StringUtil;
 
 /**
@@ -20,7 +22,7 @@ public class QueryConf {
 	private SysQueryBO bo;
 	private Map<String, String> tableAlias;
 	private List<SysQueryFieldBO> fieldList;
-	private Map<String, SysQueryFieldBO> fieldMap;
+	private LinkedCaseInsensitiveMap<SysQueryFieldBO> fieldMap;
 
 	public Map<String, String> getTableAlias() {
 		return tableAlias;
@@ -40,15 +42,15 @@ public class QueryConf {
 	}
 
 	/**
-	 * @return SysQueryFieldBO的Map，key值为getColalias的大写
+	 * @return SysQueryFieldBO的
 	 */
-	private Map<String, SysQueryFieldBO> genFieldMap() {
-		Map<String, SysQueryFieldBO> map = new HashMap<String, SysQueryFieldBO>();
+	private LinkedCaseInsensitiveMap<SysQueryFieldBO> genFieldMap() {
+		 LinkedCaseInsensitiveMap<SysQueryFieldBO> map = new  LinkedCaseInsensitiveMap<SysQueryFieldBO>();
 		if (fieldList == null) {
 			return map;
 		}
 		for (int i = 0; i < fieldList.size(); i++) {
-			map.put(StringUtil.upper(fieldList.get(i).getId().getColalias()), fieldList.get(i));
+			map.put(fieldList.get(i).getId().getColalias(), fieldList.get(i));
 		}
 		return map;
 	}

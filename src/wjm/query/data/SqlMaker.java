@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import wjm.common.exception.SuperQueryException;
 import wjm.common.util.StringUtil;
@@ -24,15 +25,20 @@ public class SqlMaker {
 	private static final String JOINWAY_RIGHT = "right";
 	private static final Logger log = Logger.getLogger(SqlMaker.class);
 	private QueryConf conf;
-	private Map<String, Object> pMap;
+	private LinkedCaseInsensitiveMap<Object> pMap;
 	private Map<String, String> tableAlias;
 	private String queryid;
 
-	public SqlMaker(String queryid, Map<String, Object> param) throws SuperQueryException {
+	/**
+	 * @param queryid
+	 * @param param key值统一大写
+	 * @throws SuperQueryException
+	 */
+	public SqlMaker(String queryid,LinkedCaseInsensitiveMap<Object> param) throws SuperQueryException {
 		this.queryid = queryid;
 		this.pMap = param;
 		if (pMap == null) {
-			pMap = new HashMap<String, Object>();
+			pMap = new LinkedCaseInsensitiveMap<Object>();
 		}
 		this.conf = QueryconfLoader.instance().getConf(this.queryid);
 		if (this.conf == null) {
@@ -117,7 +123,7 @@ public class SqlMaker {
 		StringBuffer subbuf;// 操作符及右边值的处理
 		for (int i = 0; i < list.size(); i++) {
 			bo = list.get(i);
-			param = pMap.get(StringUtil.upper(bo.getId().getColalias()));
+			param = pMap.get(bo.getId().getColalias());
 			buf = new StringBuffer();
 			buf.append(" and ");
 			buf.append(tableAlias.get(bo.getTabname()));

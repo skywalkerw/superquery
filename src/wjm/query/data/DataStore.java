@@ -15,6 +15,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.apache.log4j.Logger;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import wjm.common.exception.DataStoreException;
 import wjm.common.exception.SuperQueryException;
@@ -57,20 +58,29 @@ public class DataStore {
 		return select(sql, RESULT_MAPLIST);
 	}
 
-	public BigDecimal selectCount(String queryid, Map<String, Object> param) throws SuperQueryException,
+	public BigDecimal selectCount(String queryid,LinkedCaseInsensitiveMap<Object> param) throws SuperQueryException,
 			DataStoreException {
 		String sql = new SqlMaker(queryid, param).makeSqlcount();
 		List<Map<String, Object>> list = select(sql, RESULT_MAPLIST, queryid);
 		return (BigDecimal) list.get(0).get("COUNT");
 	}
 
-	public TableBean selectTableBeanByPage(String queryid, Map<String, Object> param, int startIndex, int pageSize)
+	/**
+	 * @param queryid
+	 * @param param key值统一大写
+	 * @param startIndex
+	 * @param pageSize
+	 * @return
+	 * @throws DataStoreException
+	 * @throws SuperQueryException
+	 */
+	public TableBean selectTableBeanByPage(String queryid, LinkedCaseInsensitiveMap<Object> param, int startIndex, int pageSize)
 			throws DataStoreException, SuperQueryException {
 		String sql = new SqlMaker(queryid, param).makeSqlByPage(startIndex, pageSize);
 		return select(sql, RESULT_TABLEBEAN, queryid);
 	}
 
-	public TableBean selectTableBean(String queryid, Map<String, Object> param) throws DataStoreException,
+	public TableBean selectTableBean(String queryid, LinkedCaseInsensitiveMap<Object> param) throws DataStoreException,
 			SuperQueryException {
 		String sql = new SqlMaker(queryid, param).makeSqlSelect();
 		return select(sql, RESULT_TABLEBEAN, queryid);
@@ -139,7 +149,7 @@ public class DataStore {
 
 	private <T extends BaseBO> List<T> resultSet2BOList(ResultSet res, Class<T> classz) throws SQLException,
 			DataStoreException {
-		List<Map<String, Object>> datas = resultSet2MapList(res);
+		List<LinkedCaseInsensitiveMap<Object>> datas = resultSet2MapList(res);
 		List<T> list = new ArrayList<T>();
 
 		for (int i = 0; i < datas.size(); i++) {
@@ -156,7 +166,7 @@ public class DataStore {
 
 	private TableBean resultSet2TableBean(ResultSet res, String queryid) throws SQLException, DataStoreException {
 		List<String> colnames = getAllColnames(res);
-		List<Map<String, Object>> datas = resultSet2MapList(res);
+		List<LinkedCaseInsensitiveMap<Object>> datas = resultSet2MapList(res);
 		return new TableBean(colnames, datas, queryid);
 	}
 
@@ -170,15 +180,15 @@ public class DataStore {
 		return headers;
 	}
 
-	private <T extends Object> List<Map<String, T>> resultSet2MapList(ResultSet res) throws SQLException,
+	private <T extends Object> List<LinkedCaseInsensitiveMap<T>> resultSet2MapList(ResultSet res) throws SQLException,
 			DataStoreException {
-		List<Map<String, T>> list = new ArrayList<Map<String, T>>();
-		Map<String, T> row;
+		List<LinkedCaseInsensitiveMap<T>> list = new ArrayList<LinkedCaseInsensitiveMap<T>>();
+		LinkedCaseInsensitiveMap<T> row;
 		ResultSetMetaData meta = res.getMetaData();
 		int colcount = meta.getColumnCount();
 		Object obj;
 		while (res.next()) {
-			row = new HashMap<String, T>();
+			row = new LinkedCaseInsensitiveMap<T>();
 			for (int i = 1; i <= colcount; i++) {
 				if (row.containsKey(meta.getColumnLabel(i))) {
 					throw new DataStoreException("数据机构转换不能返回Map.原因:结果集中存在重复列名[" + meta.getColumnLabel(i) + "]");
@@ -201,7 +211,7 @@ public class DataStore {
 					break;
 				}
 				// TODO 其他数据类型的转换
-				row.put(StringUtil.upper(meta.getColumnLabel(i)), (T) obj);
+				row.put(meta.getColumnLabel(i), (T) obj);
 			}
 			list.add(row);
 		}

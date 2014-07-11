@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import wjm.common.util.QConst;
 import wjm.common.util.StringUtil;
@@ -26,7 +27,7 @@ public class TableBean implements Serializable {
 	private static final String RN = "RN";
 	private static final Logger log = Logger.getLogger(TableBean.class);
 	private List<String> colalias;
-	private List<Map<String, Object>> datas;
+	private List<LinkedCaseInsensitiveMap<Object>> datas;
 	private static final int PERLINE_FIELD_COUNT = 2;
 	private QueryConf queryconf;
 	private int rowsize;
@@ -35,7 +36,7 @@ public class TableBean implements Serializable {
 	private boolean showRowNO;
 	DictionaryLoader dl ;
 
-	public TableBean(List<String> colnames, List<Map<String, Object>> datalist, String queryid) throws SQLException {
+	public TableBean(List<String> colnames, List<LinkedCaseInsensitiveMap<Object>> datalist, String queryid) throws SQLException {
 		this.colalias = colnames;
 		this.datas = datalist;
 		this.queryconf = QueryconfLoader.instance().getConf(queryid);
@@ -222,7 +223,7 @@ public class TableBean implements Serializable {
 	 * 
 	 * @return
 	 */
-	public List<Map<String, Object>> getDatas() {
+	public List<LinkedCaseInsensitiveMap<Object>> getDatas() {
 		return datas;
 	}
 

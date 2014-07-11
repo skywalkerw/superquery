@@ -16,6 +16,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import wjm.common.exception.DataStoreException;
 import wjm.common.exception.SuperQueryException;
@@ -102,7 +103,7 @@ public class Test {
 			//ds.selectBOList(sql, TableStructBO.class);
 			ret += new ConditionBean("query_tabstruct", null).toHtml();
 			ret += "<hr/>";
-			Map<String,Object> param = new HashMap<String, Object>();
+			LinkedCaseInsensitiveMap<Object> param = new LinkedCaseInsensitiveMap<Object>();
 			param.put("tabname", "SYS_QUERYCONF");
 			ret += ds.selectTableBean("query_tabstruct", param).toHtmlListTable(true);
 		} catch (DataStoreException e) {
@@ -116,6 +117,14 @@ public class Test {
 	}
 
 	public static void main(String[] args) {
+		//test1();
+		LinkedCaseInsensitiveMap<Object> map  = new LinkedCaseInsensitiveMap<Object>();
+		map.put("ABC", "abc");
+		System.out.println(map.get("abc"));
+		System.out.println(map.get("aBc"));
+	}
+
+	private static void test1() {
 		try {
 			SysQueryFieldBO bo = SysQueryFieldBO.class.newInstance();
 			PropertyDescriptor[] descriptors = PropertyUtils.getPropertyDescriptors(bo);
@@ -143,6 +152,5 @@ public class Test {
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
 		}
-
 	}
 }
