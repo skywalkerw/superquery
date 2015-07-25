@@ -1,4 +1,4 @@
-﻿package wjm.query.data;
+package wjm.query.data;
 
 import javax.sql.DataSource;
 
