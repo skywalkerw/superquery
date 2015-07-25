@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project basedir="." default="war" name="superquery">
 	<target name="init">
+		<property name="src.dir" value="${basedir}/src" />
 		<property name="conf.dir" value="${basedir}/conf" />
 		<property name="lib.dir" value="${basedir}/WebRoot/WEB-INF/lib" />
 		<property name="webapp.dir" value="${basedir}/WebRoot" />
 		<property name="war.dest" value="${basedir}/build/war" />
 		<property name="build.src" value="${basedir}/build/src" />
 		<property name="build.dest" value="${basedir}/build/dest" />
+		<property name="dest.dir" value="${build.dest}/WEB-INF/classes" />
 		<path id="classpath">
 			<fileset dir="${lib.dir}">
 				<include name="**/*.jar" />
@@ -22,13 +24,14 @@
 	<target name="prepare" depends="clean">
 		<mkdir dir="${build.dest}" />
 		<mkdir dir="${war.dest}" />
+		<mkdir dir="${dest.dir}" />
 		<copy todir="${build.dest}">
 			<fileset dir="${webapp.dir}" />
 		</copy>
 
 	</target>
 	<target name="build" depends="prepare">
-		<javac srcdir="${src.dir}" destdir="${build.dest}/WEB-INF/classes" includeantruntime="on">
+		<javac srcdir="${src.dir}" destdir="${dest.dir}" includeantruntime="on">
 			<classpath refid="classpath" />
 		</javac>
 		<copy todir="${build.dest}/WEB-INF/classes">
