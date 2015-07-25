@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project basedir="." default="war" name="superquery">
 	<target name="init">
+		<property name="encoding" value="UTF-8" />
 		<property name="src.dir" value="${basedir}/src" />
 		<property name="conf.dir" value="${basedir}/conf" />
 		<property name="lib.dir" value="${basedir}/WebRoot/WEB-INF/lib" />
@@ -31,7 +32,7 @@
 
 	</target>
 	<target name="build" depends="prepare">
-		<javac srcdir="${src.dir}" destdir="${dest.dir}" includeantruntime="on">
+		<javac srcdir="${src.dir}" encoding="${encoding}" destdir="${dest.dir}" includeantruntime="on">
 			<classpath refid="classpath" />
 		</javac>
 		<copy todir="${build.dest}/WEB-INF/classes">
