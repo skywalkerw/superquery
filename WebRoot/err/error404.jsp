@@ -8,7 +8,7 @@
 </head>
 <body style="background-color:#eeeeee;">
 	
-	<h1 style="color:red;"><img alt="" src="<%=request.getContextPath()%>/resource/img/monster.gif">错误404，没有找到页面！</h1>
+	<h1 style="color:red;"><img alt="" src="<%=request.getContextPath()%>/res/img/monster.gif">错误404，没有找到页面！</h1>
 	<hr />
 	
 	<h3>请尝试：</h3>
